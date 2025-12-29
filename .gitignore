@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.env.*
+.venv/
+
+# VSCode
+.vscode/
+
+# Mac
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# Pytest cache
+.pytest_cache/
