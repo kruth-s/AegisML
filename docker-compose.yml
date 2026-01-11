@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  registry:
+    build:
+      context: .
+      dockerfile: services/registry/Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./services/registry/app:/app/app
+      - ./core:/app/core
+    environment:
+      - ENV=development
+
+  deployment:
+    build:
+      context: .
+      dockerfile: services/deployment/Dockerfile
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./services/deployment/app:/app/app
+      - ./core:/app/core
+    environment:
+      - ENV=development
+
+  monitoring:
+    build:
+      context: .
+      dockerfile: services/monitoring/Dockerfile
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./services/monitoring/app:/app/app
+      - ./core:/app/core
+    environment:
+      - ENV=development
+
+  evaluation:
+    build:
+      context: .
+      dockerfile: services/evaluation/Dockerfile
+    ports:
+      - "8004:8004"
+    volumes:
+      - ./services/evaluation/app:/app/app
+      - ./core:/app/core
+    environment:
+      - ENV=development
