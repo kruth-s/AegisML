@@ -1,24 +1,25 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js build output
+.next/
+out/
+build/
+
+# Local environment & cache files
 .env
-.env.*
-.venv/
+.env*.local
+.clip_cache/
+.vercel/
 
-# VSCode
-.vscode/
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
 
-# Mac
+# Operating system files
 .DS_Store
-
-# Docker
-docker-compose.override.yml
-
-# Terraform
-*.tfstate
-*.tfstate.backup
-.terraform/
-
-# Pytest cache
-.pytest_cache/
+Thumbs.db
