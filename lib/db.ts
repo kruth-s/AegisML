@@ -1,8 +1,11 @@
 import { ClipboardRoom } from './types';
 import { Redis } from '@upstash/redis';
 
-// Initialize Redis from Vercel KV / Upstash env vars (KV_REST_API_URL + KV_REST_API_TOKEN)
-const redis = Redis.fromEnv();
+// Use the KV_ env vars that Vercel's Upstash integration injects
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
 
 // In-memory cache for fast repeated reads within the same serverless invocation
 const memoryStore = new Map<string, ClipboardRoom>();

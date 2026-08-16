@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toast, ToastMessage } from '@/components/Toast';
+import { Navbar } from '@/components/Navbar';
 import {
   Zap,
   ArrowRight,
@@ -53,7 +54,9 @@ export default function HomePage() {
   };
 
   return (
-    <div className="h-screen max-h-screen overflow-hidden flex flex-col items-center justify-center bg-zinc-950 text-zinc-100 font-sans relative p-4 sm:p-6">
+    <div className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100 font-sans">
+      <Navbar />
+      <div className="flex-1 flex flex-col items-center justify-center relative p-4 sm:p-6 overflow-hidden">
       {/* Background Radial Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-indigo-600/10 blur-[130px] rounded-full pointer-events-none -z-10" />
 
@@ -107,6 +110,7 @@ export default function HomePage() {
       </main>
 
       <Toast toasts={toasts} onClose={removeToast} />
+      </div>
     </div>
   );
 }
