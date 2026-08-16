@@ -9,6 +9,10 @@ const config: Config = {
   darkMode: "class",
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'monospace'],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
@@ -19,12 +23,6 @@ const config: Config = {
           600: "#4f46e5",
           700: "#4338ca",
         },
-        cyber: {
-          cyan: "#00f2fe",
-          blue: "#4facfe",
-          purple: "#7f00ff",
-          pink: "#e100ff",
-        }
       },
       animation: {
         'pulse-glow': 'pulseGlow 3s ease-in-out infinite',

@@ -1,10 +1,23 @@
 import type { Metadata } from 'next';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'ClipBin.live — Modern Cross-Device Online Clipboard',
-  description: 'Instantly paste and share text, code snippets, and notes across all your devices in real-time. Zero sign-up, instant QR pairing, Vercel optimized.',
-  keywords: ['online clipboard', 'cross device clipboard', 'share text online', 'pastebin', 'realtime clipboard', 'vercel pastebin'],
+  title: 'ClipBin — Real-Time Cross-Device Clipboard',
+  description: 'Instantly paste and share text, code snippets, and notes across all your devices in real-time. Zero sign-up, instant QR pairing.',
+  keywords: ['online clipboard', 'cross device clipboard', 'share text online', 'pastebin', 'realtime clipboard'],
 };
 
 export default function RootLayout({
@@ -13,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-mesh min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white antialiased">
+    <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
+      <body className="bg-grid-pattern min-h-screen flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200 antialiased font-sans text-zinc-100">
         {children}
       </body>
     </html>
