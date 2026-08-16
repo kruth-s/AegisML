@@ -7,12 +7,10 @@ import {
   ClipboardPaste,
   Trash2,
   Share2,
-  Clock,
   Code,
   FileText,
   Sparkles,
   Link as LinkIcon,
-  Eye,
 } from 'lucide-react';
 
 interface ClipEditorProps {
@@ -123,34 +121,34 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
   const lineCount = content ? content.split('\n').length : 1;
 
   return (
-    <div className="w-full flex flex-col glass-card rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
+    <div className="w-full flex flex-col bg-zinc-900/90 rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden backdrop-blur-xl">
       {/* Editor Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 bg-slate-900/90 border-b border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 bg-zinc-950/90 border-b border-zinc-800/80">
         {/* Left Status & Type Indicator */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
-            <span className="font-mono text-xs font-semibold text-slate-200 uppercase tracking-wide">
+            <span className="font-mono text-xs font-bold text-zinc-200 uppercase tracking-wide">
               {slug}
             </span>
           </div>
 
-          <span className="text-slate-600">|</span>
+          <span className="text-zinc-700">|</span>
 
           {/* Detected Format Badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-mono text-slate-300">
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-300">
             {detectedType === 'url' && <LinkIcon className="w-3 h-3 text-cyan-400" />}
             {detectedType === 'json' && <Code className="w-3 h-3 text-emerald-400" />}
-            {detectedType === 'code' && <Code className="w-3 h-3 text-purple-400" />}
-            {detectedType === 'text' && <FileText className="w-3 h-3 text-indigo-400" />}
+            {detectedType === 'code' && <Code className="w-3 h-3 text-indigo-400" />}
+            {detectedType === 'text' && <FileText className="w-3 h-3 text-zinc-400" />}
             <span className="uppercase">{detectedType}</span>
           </div>
 
           {/* Save Status Indicator */}
-          <span className="text-xs font-medium text-slate-400">
+          <span className="text-xs font-mono">
             {isSaving ? (
               <span className="text-amber-400 animate-pulse">Saving...</span>
             ) : (
@@ -164,10 +162,10 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
           {/* Quick Paste Button */}
           <button
             onClick={handlePasteFromClipboard}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition-all hover:scale-105"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-xs font-semibold transition-colors"
             title="Paste text from clipboard"
           >
-            <ClipboardPaste className="w-3.5 h-3.5" />
+            <ClipboardPaste className="w-3.5 h-3.5 text-indigo-400" />
             <span>Paste</span>
           </button>
 
@@ -175,11 +173,11 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
           <button
             onClick={handleCopyAll}
             disabled={!content}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition-all hover:scale-105"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 disabled:opacity-40 text-xs font-bold shadow-sm transition-all"
           >
             {copied ? (
               <>
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Copied</span>
               </>
             ) : (
@@ -194,7 +192,7 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
           <button
             onClick={handleClear}
             disabled={!content}
-            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 rounded-lg transition-colors"
+            className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-zinc-800 disabled:opacity-30 rounded-xl transition-colors"
             title="Clear clipboard"
           >
             <Trash2 className="w-4 h-4" />
@@ -203,21 +201,21 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
       </div>
 
       {/* Main Textarea */}
-      <div className="relative min-h-[360px] sm:min-h-[440px] flex flex-col bg-slate-950/60">
+      <div className="relative min-h-[380px] sm:min-h-[460px] flex flex-col bg-zinc-950/70">
         <textarea
           ref={textareaRef}
           value={content}
           onChange={handleChange}
           placeholder="Paste or type text here... Anyone accessing this room URL will see updates live in real-time."
-          className="w-full h-full min-h-[360px] sm:min-h-[440px] p-5 bg-transparent text-slate-100 placeholder:text-slate-600 font-mono text-sm sm:text-base leading-relaxed focus:outline-none resize-y"
+          className="w-full h-full min-h-[380px] sm:min-h-[460px] p-5 sm:p-6 bg-transparent text-zinc-100 placeholder:text-zinc-600 font-mono text-sm sm:text-base leading-relaxed focus:outline-none resize-y"
           spellCheck="false"
         />
 
         {!content && (
-          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-6 text-center text-slate-600">
-            <Sparkles className="w-10 h-10 mb-3 text-slate-700 animate-pulse" />
-            <p className="text-sm font-medium text-slate-400">Clipboard is currently empty</p>
-            <p className="text-xs text-slate-500 max-w-sm mt-1">
+          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-6 text-center text-zinc-600">
+            <Sparkles className="w-9 h-9 mb-3 text-zinc-700 animate-pulse" />
+            <p className="text-sm font-semibold text-zinc-400 font-sans">Clipboard is currently empty</p>
+            <p className="text-xs text-zinc-500 max-w-sm mt-1 font-sans">
               Start typing, paste from clipboard, or scan QR code on another device to sync text immediately.
             </p>
           </div>
@@ -225,30 +223,30 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
       </div>
 
       {/* Editor Footer / Stats Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-3 bg-slate-900/90 border-t border-slate-800 text-xs font-mono text-slate-400">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-3 bg-zinc-950/90 border-t border-zinc-800/80 text-xs font-mono text-zinc-400">
         <div className="flex items-center gap-4">
           <span>
-            Characters: <strong className="text-slate-200">{charCount}</strong>
+            Characters: <strong className="text-zinc-200">{charCount}</strong>
           </span>
           <span>
-            Words: <strong className="text-slate-200">{wordCount}</strong>
+            Words: <strong className="text-zinc-200">{wordCount}</strong>
           </span>
           <span>
-            Lines: <strong className="text-slate-200">{lineCount}</strong>
+            Lines: <strong className="text-zinc-200">{lineCount}</strong>
           </span>
         </div>
 
         <div className="flex items-center gap-3">
           {lastUpdated && (
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-zinc-500">
               Updated: {new Date(lastUpdated).toLocaleTimeString()}
             </span>
           )}
           <button
             onClick={onOpenQR}
-            className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-sans font-semibold transition-colors"
+            className="flex items-center gap-1.5 text-zinc-300 hover:text-white font-sans font-medium transition-colors"
           >
-            <Share2 className="w-3.5 h-3.5" />
+            <Share2 className="w-3.5 h-3.5 text-indigo-400" />
             <span>Share / QR</span>
           </button>
         </div>
@@ -256,3 +254,4 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
     </div>
   );
 };
+

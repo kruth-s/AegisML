@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
-  Clipboard,
   QrCode,
   Plus,
   ArrowRight,
@@ -80,11 +80,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoom, onOpenQR, isSyncing
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-2.5 px-2 py-1 rounded-xl hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all text-left"
           >
-            <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 shadow-sm">
-              <Clipboard className="w-4 h-4 text-indigo-400" />
+            <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 shadow-sm">
+              <Image src="/logo.png" alt="The Drop" width={28} height={28} className="w-full h-full object-cover" />
             </div>
             <span className="font-semibold text-sm tracking-tight text-zinc-100 flex items-center gap-1.5">
-              ClipBin
+              The Drop
               <span className="text-[11px] px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
                 {currentRoom ? currentRoom : 'main'}
               </span>

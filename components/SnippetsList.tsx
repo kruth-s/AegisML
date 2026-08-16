@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ClipItem } from '@/lib/types';
-import { Plus, Copy, Check, Trash2, Code, FileText, ExternalLink } from 'lucide-react';
+import { Plus, Copy, Check, Trash2 } from 'lucide-react';
 
 interface SnippetsListProps {
   snippets: ClipItem[];
@@ -40,22 +40,22 @@ export const SnippetsList: React.FC<SnippetsListProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-col gap-4 mt-8">
+    <div className="w-full flex flex-col gap-4 mt-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
             <span>Saved Clips & Snippets</span>
-            <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-mono border border-indigo-500/20">
+            <span className="px-2 py-0.5 rounded-md bg-zinc-900 text-zinc-300 text-xs font-mono border border-zinc-800">
               {snippets.length}
             </span>
           </h2>
-          <p className="text-xs text-slate-400">Keep multiple distinct code snippets, links, or notes in this room.</p>
+          <p className="text-xs text-zinc-500">Keep multiple distinct code snippets, links, or notes in this room.</p>
         </div>
 
         {!isAdding && (
           <button
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all hover:scale-105"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 text-xs font-semibold transition-colors"
           >
             <Plus className="w-4 h-4 text-indigo-400" />
             <span>Add Snippet</span>
@@ -65,13 +65,13 @@ export const SnippetsList: React.FC<SnippetsListProps> = ({
 
       {/* Add New Snippet Form */}
       {isAdding && (
-        <form onSubmit={handleAdd} className="glass-card p-4 rounded-2xl border border-indigo-500/30 flex flex-col gap-3">
+        <form onSubmit={handleAdd} className="bg-zinc-900/90 p-4 rounded-2xl border border-zinc-800 flex flex-col gap-3 backdrop-blur-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-indigo-300 uppercase tracking-wide">New Snippet</span>
+            <span className="text-xs font-bold text-zinc-300 font-mono uppercase tracking-wide">New Snippet</span>
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="text-xs text-slate-400 hover:text-white"
+              className="text-xs text-zinc-500 hover:text-zinc-200"
             >
               Cancel
             </button>
@@ -81,19 +81,19 @@ export const SnippetsList: React.FC<SnippetsListProps> = ({
             placeholder="Title (optional, e.g. WiFi Password, React Component...)"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="px-3 py-2 rounded-xl glass-input text-xs"
+            className="px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-200 placeholder:text-zinc-600 text-xs font-mono focus:outline-none focus:border-zinc-700"
           />
           <textarea
             placeholder="Snippet text or code..."
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
-            className="px-3 py-2 rounded-xl glass-input text-xs font-mono min-h-[100px]"
+            className="px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-200 placeholder:text-zinc-600 text-xs font-mono min-h-[100px] focus:outline-none focus:border-zinc-700"
             required
           />
           <div className="flex justify-end gap-2">
             <button
               type="submit"
-              className="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20"
+              className="px-4 py-1.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-bold shadow-sm"
             >
               Save Snippet
             </button>
@@ -107,17 +107,17 @@ export const SnippetsList: React.FC<SnippetsListProps> = ({
           {snippets.map((item) => (
             <div
               key={item.id}
-              className="glass-card glass-card-hover p-4 rounded-2xl border border-slate-800 flex flex-col justify-between gap-3"
+              className="bg-zinc-900/90 p-4 rounded-2xl border border-zinc-800 flex flex-col justify-between gap-3 shadow-sm hover:border-zinc-700 transition-colors"
             >
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-slate-100 truncate">
+                  <h4 className="text-sm font-bold text-zinc-100 truncate">
                     {item.title || 'Untitled Snippet'}
                   </h4>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleCopy(item.id, item.content)}
-                      className="p-1.5 text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-colors"
+                      className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
                       title="Copy Snippet"
                     >
                       {copiedId === item.id ? (
@@ -128,19 +128,19 @@ export const SnippetsList: React.FC<SnippetsListProps> = ({
                     </button>
                     <button
                       onClick={() => onDeleteSnippet(item.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                      className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition-colors"
                       title="Delete Snippet"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-                <pre className="p-3 rounded-xl bg-slate-950/80 border border-slate-900 text-slate-200 font-mono text-xs overflow-x-auto max-h-36 whitespace-pre-wrap break-all">
+                <pre className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-200 font-mono text-xs overflow-x-auto max-h-36 whitespace-pre-wrap break-all">
                   {item.content}
                 </pre>
               </div>
 
-              <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+              <div className="flex items-center justify-between text-[10px] text-zinc-500 font-mono">
                 <span>{new Date(item.createdAt).toLocaleTimeString()}</span>
                 <span>{item.content.length} chars</span>
               </div>
@@ -149,11 +149,12 @@ export const SnippetsList: React.FC<SnippetsListProps> = ({
         </div>
       ) : (
         !isAdding && (
-          <div className="p-6 rounded-2xl glass-card border border-slate-800 text-center text-slate-500 text-xs">
-            No extra snippets saved in this room yet. Click <strong>Add Snippet</strong> above to keep multiple items organized.
+          <div className="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-center text-zinc-500 text-xs">
+            No extra snippets saved in this room yet. Click <strong className="text-zinc-300 font-semibold">Add Snippet</strong> above to keep multiple items organized.
           </div>
         )
       )}
     </div>
   );
 };
+

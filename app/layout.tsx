@@ -15,9 +15,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ClipBin — Real-Time Cross-Device Clipboard',
+  title: 'The Drop',
   description: 'Instantly paste and share text, code snippets, and notes across all your devices in real-time. Zero sign-up, instant QR pairing.',
-  keywords: ['online clipboard', 'cross device clipboard', 'share text online', 'pastebin', 'realtime clipboard'],
+  keywords: ['online clipboard', 'cross device clipboard', 'share text online', 'pastebin', 'realtime clipboard', 'the drop'],
 };
 
 export default function RootLayout({

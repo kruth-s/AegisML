@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { QrCode, X, Copy, Check, Smartphone, ExternalLink } from 'lucide-react';
+import { X, Copy, Check, Smartphone } from 'lucide-react';
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -28,42 +28,42 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md transition-opacity">
-      <div className="relative w-full max-w-md p-6 glass-card rounded-2xl border border-slate-700/80 shadow-2xl animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-opacity">
+      <div className="relative w-full max-w-md p-6 bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-slate-800/80"
+          className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-200 transition-colors p-2 rounded-xl hover:bg-zinc-900"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-            <Smartphone className="w-6 h-6" />
+          <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-indigo-400">
+            <Smartphone className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Pair Mobile Device</h3>
-            <p className="text-xs text-slate-400">Scan QR code to access clipboard on phone</p>
+            <h3 className="text-base font-bold text-white">Pair Mobile Device</h3>
+            <p className="text-xs text-zinc-500">Scan QR code to access clipboard on phone</p>
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center p-6 my-4 bg-white/95 rounded-2xl border border-slate-200 shadow-inner">
+        <div className="flex flex-col items-center justify-center p-6 my-4 bg-white rounded-2xl border border-zinc-200 shadow-inner">
           <QRCodeSVG value={url} size={200} level="H" includeMargin={true} />
-          <p className="mt-3 text-xs font-mono font-bold text-slate-800 tracking-wider uppercase">
+          <p className="mt-3 text-xs font-mono font-bold text-zinc-900 tracking-wider uppercase">
             ROOM: {roomSlug}
           </p>
         </div>
 
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-mono text-slate-300">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300">
             <span className="truncate pr-2">{url}</span>
             <button
               onClick={handleCopyLink}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-sans font-medium transition-all shrink-0"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-sans font-bold transition-all shrink-0"
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
                   Copied
                 </>
               ) : (
@@ -79,3 +79,4 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
     </div>
   );
 };
+

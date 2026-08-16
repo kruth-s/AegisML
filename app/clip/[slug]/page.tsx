@@ -8,7 +8,7 @@ import { SnippetsList } from '@/components/SnippetsList';
 import { QRCodeModal } from '@/components/QRCodeModal';
 import { Toast, ToastMessage } from '@/components/Toast';
 import { ClipboardRoom, ClipItem } from '@/lib/types';
-import { ArrowLeft, RefreshCw, Smartphone, Copy, Check } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ClipRoomPage() {
@@ -68,7 +68,6 @@ export default function ClipRoomPage() {
           const serverRoom: ClipboardRoom = data.data;
           setRoomData(serverRoom);
 
-          // Only update editor text if user is not actively typing
           if (!isTypingRef.current) {
             setMainContent(serverRoom.mainContent || '');
           }
@@ -83,7 +82,7 @@ export default function ClipRoomPage() {
     [slug]
   );
 
-  // Initial fetch + Auto polling every 2.5s for real-time cross-device sync
+  // Initial fetch + Auto polling every 2.5s
   useEffect(() => {
     fetchRoomData();
     const interval = setInterval(() => {
@@ -151,26 +150,30 @@ export default function ClipRoomPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between">
+    <div className="min-h-screen flex flex-col justify-between bg-zinc-950 text-zinc-100 font-sans relative">
+      {/* Background Glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-indigo-600/10 blur-[130px] rounded-full pointer-events-none -z-10" />
+
       <Navbar currentRoom={slug} onOpenQR={() => setIsQRModalOpen(true)} isSyncing={isSyncing} />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
-        {/* Navigation Breadcrumb & Title Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <main className="flex-1 max-w-5xl sm:max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+        {/* Navigation Breadcrumb & Room Title Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="p-2 rounded-xl glass-card hover:bg-slate-800 text-slate-400 hover:text-white transition-all"
+              className="p-2 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
+              title="Back to Home"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
-              <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                <span>Room:</span>
+              <h1 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <span className="text-zinc-400 font-medium">Room:</span>
                 <span className="font-mono text-indigo-400">{slug}</span>
               </h1>
-              <p className="text-xs text-slate-400">
-                Share this room URL or QR code to access your clipboard on other devices.
+              <p className="text-xs text-zinc-500">
+                Share this room URL or scan QR code to access clipboard live across devices.
               </p>
             </div>
           </div>
@@ -178,8 +181,8 @@ export default function ClipRoomPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => fetchRoomData()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-card hover:bg-slate-800 text-slate-300 text-xs font-medium transition-all"
-              title="Manual Sync Now"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 hover:bg-zinc-900 text-zinc-300 text-xs font-mono transition-colors"
+              title="Sync manually"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${isSyncing ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
@@ -187,9 +190,9 @@ export default function ClipRoomPage() {
 
             <button
               onClick={() => setIsQRModalOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-all hover:scale-105"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-bold transition-all shadow-sm"
             >
-              <Smartphone className="w-4 h-4 text-cyan-400" />
+              <Smartphone className="w-3.5 h-3.5" />
               <span>Mobile QR Code</span>
             </button>
           </div>
@@ -215,14 +218,14 @@ export default function ClipRoomPage() {
         />
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/80 py-6">
-        <div className="max-w-5xl mx-auto px-4 text-center text-xs text-slate-500">
-          Connected to Room <code className="text-indigo-400">{slug}</code> • Live Cross-Device Sync Active
+      {/* Sleek Dark Footer */}
+      <footer className="border-t border-zinc-900 bg-zinc-950 py-5">
+        <div className="max-w-5xl mx-auto px-4 text-center text-xs text-zinc-500 font-mono">
+          Connected to Room <code className="text-indigo-400">{slug}</code> • Real-time Cross-Device Sync
         </div>
       </footer>
 
-      {/* QR Code Modal for Smartphone Pairing */}
+      {/* QR Code Modal */}
       <QRCodeModal
         isOpen={isQRModalOpen}
         onClose={() => setIsQRModalOpen(false)}
@@ -234,3 +237,4 @@ export default function ClipRoomPage() {
     </div>
   );
 }
+
