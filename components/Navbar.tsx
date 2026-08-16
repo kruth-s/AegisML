@@ -1,9 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Clipboard, QrCode, Plus, ArrowRight, Zap, RefreshCw } from 'lucide-react';
+import {
+  Clipboard,
+  QrCode,
+  Plus,
+  ArrowRight,
+  ChevronDown,
+  Clock,
+  Home,
+  FolderKanban,
+  Search,
+} from 'lucide-react';
 
 interface NavbarProps {
   currentRoom?: string;
@@ -13,7 +23,31 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ currentRoom, onOpenQR, isSyncing }) => {
   const [joinSlug, setJoinSlug] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [recentRooms, setRecentRooms] = useState<string[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Read recent rooms for dropdown
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('clipbin_recent_rooms');
+      if (saved) {
+        setRecentRooms(JSON.parse(saved));
+      }
+    } catch (e) {}
+  }, []);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +55,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoom, onOpenQR, isSyncing
     const clean = joinSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
     router.push(`/clip/${clean}`);
     setJoinSlug('');
+    setIsDropdownOpen(false);
   };
 
   const handleCreateNew = async () => {
@@ -37,75 +72,128 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoom, onOpenQR, isSyncing
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="p-2 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-            <Clipboard className="w-5 h-5" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-indigo-200">
-              ClipBin<span className="text-indigo-400">.live</span>
-            </span>
-            <span className="text-[10px] font-medium text-slate-400 -mt-1 tracking-wider uppercase">
-              Cross-Device Clipboard
-            </span>
-          </div>
-        </Link>
-
-        {/* Quick Room Join Bar */}
-        <form onSubmit={handleJoin} className="hidden md:flex items-center relative max-w-xs w-full">
-          <input
-            type="text"
-            placeholder="Join room code or name..."
-            value={joinSlug}
-            onChange={(e) => setJoinSlug(e.target.value)}
-            className="w-full py-1.5 pl-3 pr-8 rounded-lg glass-input text-xs placeholder:text-slate-500 focus:outline-none"
-          />
+    <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+        {/* Brand & Project Dropdown */}
+        <div className="relative flex items-center gap-2" ref={dropdownRef}>
           <button
-            type="submit"
-            className="absolute right-1 p-1 text-slate-400 hover:text-indigo-400 transition-colors"
-            title="Join Room"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-2.5 px-2 py-1 rounded-xl hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all text-left"
           >
-            <ArrowRight className="w-3.5 h-3.5" />
+            <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 shadow-sm">
+              <Clipboard className="w-4 h-4 text-indigo-400" />
+            </div>
+            <span className="font-semibold text-sm tracking-tight text-zinc-100 flex items-center gap-1.5">
+              ClipBin
+              <span className="text-[11px] px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
+                {currentRoom ? currentRoom : 'main'}
+              </span>
+              <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-indigo-400' : ''}`} />
+            </span>
           </button>
-        </form>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {isSyncing !== undefined && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] font-mono text-slate-400">
-              <RefreshCw className={`w-3 h-3 text-indigo-400 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Live Sync'}</span>
+          {/* Project & Room Dropdown Menu */}
+          {isDropdownOpen && (
+            <div className="absolute top-full left-0 mt-2 w-72 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl p-3 flex flex-col gap-3 z-50">
+              <div className="flex items-center justify-between px-1 text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
+                <span className="flex items-center gap-1.5">
+                  <FolderKanban className="w-3.5 h-3.5 text-indigo-400" />
+                  Select Project Room
+                </span>
+              </div>
+
+              {/* Room Search / Quick Jump */}
+              <form onSubmit={handleJoin} className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="Switch room code..."
+                  value={joinSlug}
+                  onChange={(e) => setJoinSlug(e.target.value)}
+                  className="w-full py-1.5 pl-8 pr-7 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 font-mono"
+                />
+                <button type="submit" className="absolute right-2 top-2 text-zinc-400 hover:text-zinc-200">
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </form>
+
+              {/* Home & Recent Rooms */}
+              <div className="flex flex-col gap-1 border-t border-zinc-900 pt-2">
+                <Link
+                  href="/"
+                  onClick={() => setIsDropdownOpen(false)}
+                  className="px-2.5 py-1.5 rounded-lg text-xs text-zinc-300 hover:bg-zinc-900 flex items-center gap-2 transition-colors"
+                >
+                  <Home className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>Main Workspace</span>
+                </Link>
+
+                {recentRooms.length > 0 && (
+                  <div className="mt-1">
+                    <span className="px-2 text-[10px] font-mono text-zinc-500 uppercase tracking-wider flex items-center gap-1 mb-1">
+                      <Clock className="w-3 h-3 text-zinc-500" />
+                      Recent Rooms
+                    </span>
+                    <div className="flex flex-col gap-0.5 max-h-36 overflow-y-auto">
+                      {recentRooms.map((room) => (
+                        <button
+                          key={room}
+                          onClick={() => {
+                            router.push(`/clip/${room}`);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full px-2.5 py-1.5 rounded-lg text-xs text-left font-mono flex items-center justify-between transition-colors ${
+                            currentRoom === room
+                              ? 'bg-indigo-500/10 text-indigo-400 font-semibold border border-indigo-500/20'
+                              : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                          }`}
+                        >
+                          <span className="truncate">{room}</span>
+                          {currentRoom === room && <span className="text-[10px] text-indigo-400 font-sans">Active</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action */}
+              <button
+                onClick={() => {
+                  handleCreateNew();
+                  setIsDropdownOpen(false);
+                }}
+                className="w-full py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-semibold text-zinc-200 flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Create New Room</span>
+              </button>
             </div>
           )}
+        </div>
 
+        {/* Minimal Right Actions */}
+        <div className="flex items-center gap-2">
           {currentRoom && onOpenQR && (
             <button
               onClick={onOpenQR}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-semibold transition-all hover:scale-105"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs font-medium transition-colors"
             >
-              <QrCode className="w-4 h-4 text-cyan-400" />
-              <span className="hidden sm:inline">Pair Mobile</span>
+              <QrCode className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden sm:inline">QR Pair</span>
             </button>
           )}
 
           <button
             onClick={handleCreateNew}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/25 transition-all hover:scale-105"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold transition-all"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>New Room</span>
           </button>
-
-          {/* Vercel Badge */}
-          <div className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-[10px] text-emerald-400 font-mono">
-            <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400" />
-            Vercel Ready
-          </div>
         </div>
       </div>
     </header>
   );
 };
+
