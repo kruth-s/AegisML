@@ -215,7 +215,7 @@ export default function ClipRoomPage() {
           <FileUpload slug={slug} onUploaded={() => fetchRoomData()} />
 
           {/* File listing */}
-          <FileList files={roomData?.files} />
+          <FileList files={roomData?.files} slug={slug} onDeleted={() => fetchRoomData()} />
         </div>
 
         {/* Additional Snippets List Component */}

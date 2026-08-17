@@ -19,9 +19,9 @@ export const metadata: Metadata = {
   description: 'Instantly paste and share text, code snippets, and notes across all your devices in real-time. Zero sign-up, instant QR pairing.',
   keywords: ['online clipboard', 'cross device clipboard', 'share text online', 'pastebin', 'realtime clipboard', 'the drop'],
   icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
-    apple: '/icon.png',
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
   },
 };
 

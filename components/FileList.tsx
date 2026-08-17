@@ -2,10 +2,12 @@
 
 import React from 'react';
 import { FileItem } from '@/lib/types';
-import { Link, Copy, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 interface FileListProps {
   files?: FileItem[];
+  slug?: string;
+  onDeleted?: () => void;
 }
 
 function formatBytes(bytes: number) {
@@ -15,7 +17,7 @@ function formatBytes(bytes: number) {
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
 }
 
-export const FileList: React.FC<FileListProps> = ({ files }) => {
+export const FileList: React.FC<FileListProps> = ({ files, slug, onDeleted }) => {
   if (!files || files.length === 0) {
     return (
       <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-center text-zinc-500 text-xs">
@@ -44,11 +46,26 @@ export const FileList: React.FC<FileListProps> = ({ files }) => {
               </a>
 
               <button
-                onClick={() => { navigator.clipboard.writeText(f.url); }}
-                className="px-2 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium flex items-center gap-2"
-                title="Copy file URL"
+                onClick={async () => {
+                  if (!confirm('Delete this file? This cannot be undone.')) return;
+                  try {
+                    const targetSlug = slug || (typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : '');
+                    if (!targetSlug) throw new Error('Room slug not found');
+                    const res = await fetch(`/api/clip/${targetSlug}/files/${f.id}`, { method: 'DELETE' });
+                    const json = await res.json();
+                    if (!json.success) throw new Error(json.error || 'Delete failed');
+                    onDeleted && onDeleted();
+                    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('clip-file-deleted'));
+                  } catch (e) {
+                    console.error(e);
+                    alert((e as any).message || 'Failed to delete file');
+                  }
+                }}
+                className="px-2 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium flex items-center gap-2"
+                title="Delete file"
               >
-                <Copy className="w-3.5 h-3.5" />
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                <span>Delete</span>
               </button>
             </div>
           </div>
