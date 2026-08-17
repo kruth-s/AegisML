@@ -6,6 +6,8 @@ import { Navbar } from '@/components/Navbar';
 import { ClipEditor } from '@/components/ClipEditor';
 import { SnippetsList } from '@/components/SnippetsList';
 import { QRCodeModal } from '@/components/QRCodeModal';
+import { FileUpload } from '@/components/FileUpload';
+import { FileList } from '@/components/FileList';
 import { Toast, ToastMessage } from '@/components/Toast';
 import { ClipboardRoom, ClipItem } from '@/lib/types';
 import { ArrowLeft, RefreshCw, Smartphone } from 'lucide-react';
@@ -208,6 +210,13 @@ export default function ClipRoomPage() {
           onShowToast={addToast}
           onOpenQR={() => setIsQRModalOpen(true)}
         />
+
+        <div className="w-full max-w-5xl">
+          <FileUpload slug={slug} onUploaded={() => fetchRoomData()} />
+
+          {/* File listing */}
+          <FileList files={roomData?.files} />
+        </div>
 
         {/* Additional Snippets List Component */}
         <SnippetsList
