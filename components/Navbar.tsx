@@ -202,6 +202,21 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoom, onOpenQR, isSyncing
             )}
           </div>
 
+          {/* This link */}
+          <Link
+            href="https://ai-code-navigator.vercel.app/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center py-2 transition-opacity hover:opacity-80"
+            aria-label="AKAZA"
+          >
+            <img
+              src="/Akaza.png"
+              alt="AKAZA"
+              className="h-6 w-auto object-contain"
+            />
+          </Link>
+
         </nav>
 
         {/* Right: Cloudflare-Style Action Buttons */}
