@@ -37,11 +37,11 @@ export default function ClipRoomPage() {
 
       // Save to recent rooms list in localStorage
       try {
-        const saved = localStorage.getItem('clipbin_recent_rooms');
+        const saved = localStorage.getItem('the_drop_recent_rooms') || localStorage.getItem('clipbin_recent_rooms');
         const list: string[] = saved ? JSON.parse(saved) : [];
         if (!list.includes(slug)) {
           const updated = [slug, ...list.filter((s) => s !== slug)].slice(0, 10);
-          localStorage.setItem('clipbin_recent_rooms', JSON.stringify(updated));
+          localStorage.setItem('the_drop_recent_rooms', JSON.stringify(updated));
         }
       } catch (e) {}
     }

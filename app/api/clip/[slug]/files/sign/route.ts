@@ -19,7 +19,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const folder = `clipbin/${slug}`;
+    const folder = `the-drop/${slug}`;
     const timestamp = Math.floor(Date.now() / 1000);
     // Sign upload params server-side. Keep signature fields minimal and match the form data sent from client.
     const signature = cloudinary.utils.api_sign_request({ timestamp, folder }, process.env.CLOUDINARY_API_SECRET || '');
