@@ -206,13 +206,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoom, onOpenQR, isSyncing
 
         {/* Right: Cloudflare-Style Action Buttons */}
         <div className="flex items-center gap-3.5 shrink-0" ref={dropdownRef}>
-          {/* Wanna Create a room Link */}
           <button
             onClick={handleCreateNew}
-            className="inline-flex items-center gap-1.5 text-xs text-[#ff5a1f] hover:text-[#ff7a45] font-semibold transition-colors pr-1"
+            className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-transparent px-3 py-1.5 text-xs font-medium text-zinc-100 transition-colors hover:border-zinc-500 hover:bg-zinc-900"
           >
-            <AlertCircle className="w-3.5 h-3.5 text-[#ff5a1f]" />
-            <span> Create New Room</span>
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#ff5a1f] text-[10px] font-bold text-white">+</span>
+            <span>New Room</span>
           </button>
 
           {/* Dashboard Button (Pill style with Recent Rooms Dropdown) */}

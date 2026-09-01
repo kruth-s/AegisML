@@ -2,9 +2,8 @@
 
 import React, { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Html } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { Database, User } from 'lucide-react';
 import globePoints from '@/lib/globePoints.json';
 
 function latLonToVector3(lat: number, lon: number, radius: number) {
@@ -25,19 +24,6 @@ function createCurvePoints(start: THREE.Vector3, end: THREE.Vector3, altitude = 
 
   const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
   return curve.getPoints(50);
-}
-
-function NetworkArc({ start, end, altitude = 1.2 }: { start: THREE.Vector3; end: THREE.Vector3; altitude?: number }) {
-  const lineGeometry = useMemo(() => {
-    const pts = createCurvePoints(start, end, altitude);
-    return new THREE.BufferGeometry().setFromPoints(pts);
-  }, [start, end, altitude]);
-
-  return (
-    <line geometry={lineGeometry}>
-      <lineBasicMaterial color="#ff5a1f" transparent opacity={0.9} linewidth={1.5} />
-    </line>
-  );
 }
 
 function EarthDots() {
@@ -72,12 +58,6 @@ function Globe() {
       innerGlobeRef.current.rotation.y += delta * 0.05;
     }
   });
-
-  // Network Nodes Coordinates on Globe surface (radius: 2.52)
-  const radius = 2.52;
-  const dbPos = useMemo(() => latLonToVector3(40, -68, radius), [radius]);
-  const user1Pos = useMemo(() => latLonToVector3(54, -110, radius), [radius]);
-  const user2Pos = useMemo(() => latLonToVector3(-8, -42, radius), [radius]);
 
   // 15 degrees tilt in radians: 15 * (PI / 180) ≈ 0.2618 rad
   const tilt15Deg = 15 * (Math.PI / 180);
@@ -118,42 +98,6 @@ function Globe() {
           />
         </mesh>
 
-        {/* Connecting Network Arcs */}
-        <NetworkArc start={user1Pos} end={dbPos} altitude={1.2} />
-        <NetworkArc start={user2Pos} end={dbPos} altitude={1.22} />
-
-        {/* Central Database / Server Node */}
-        <group position={dbPos}>
-          <Html center distanceFactor={9} zIndexRange={[100, 0]}>
-            <div className="relative flex items-center justify-center pointer-events-none select-none">
-              <div className="w-8 h-8 rounded-full bg-[#ff5a1f] shadow-md border-2 border-[#ff7a45] flex items-center justify-center text-zinc-950">
-                <Database className="w-4 h-4 text-zinc-950 stroke-[2.5]" />
-              </div>
-            </div>
-          </Html>
-        </group>
-
-        {/* User Node 1 Badge */}
-        <group position={user1Pos}>
-          <Html center distanceFactor={9} zIndexRange={[100, 0]}>
-            <div className="relative flex items-center justify-center pointer-events-none select-none">
-              <div className="w-7 h-7 rounded-full bg-[#0b0f17]/95 border-2 border-[#ff5a1f] shadow-lg shadow-black/60 flex items-center justify-center">
-                <User className="w-3.5 h-3.5 text-[#ff5a1f] stroke-[2.2]" />
-              </div>
-            </div>
-          </Html>
-        </group>
-
-        {/* User Node 2 Badge */}
-        <group position={user2Pos}>
-          <Html center distanceFactor={9} zIndexRange={[100, 0]}>
-            <div className="relative flex items-center justify-center pointer-events-none select-none">
-              <div className="w-7 h-7 rounded-full bg-[#0b0f17]/95 border-2 border-[#ff5a1f] shadow-lg shadow-black/60 flex items-center justify-center">
-                <User className="w-3.5 h-3.5 text-[#ff5a1f] stroke-[2.2]" />
-              </div>
-            </div>
-          </Html>
-        </group>
       </group>
     </group>
   );

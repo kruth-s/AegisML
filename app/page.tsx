@@ -71,18 +71,52 @@ export default function HomePage() {
       <Navbar />
 
       {/* Cloudflare-style Globe Hero Section */}
-      <section className="relative flex-1 min-h-[640px] lg:min-h-[680px] w-full overflow-hidden flex flex-col items-center justify-start pt-2 sm:pt-4 px-4 sm:px-6">
+      <section className="relative flex-1 min-h-[calc(100vh-80px)] w-full overflow-hidden flex flex-col items-center justify-start pt-2 sm:pt-4 px-4 sm:px-6">
         {/* Subtle background glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[#ff5a1f]/10 blur-[160px] rounded-full pointer-events-none -z-10" />
 
         {/* Hero Header (Always layered in front of Globe) */}
-        <div className="z-30 relative pointer-events-none text-center max-w-4xl mx-auto flex flex-col items-center gap-2 sm:gap-2.5">
+        {/* <div className="z-30 relative pointer-events-none text-center max-w-4xl mx-auto flex flex-col items-center gap-2 sm:gap-2.5">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-[0.06em] uppercase text-white leading-[1.15] drop-shadow-[0_6px_24px_rgba(0,0,0,0.9)]">
             Drop <br />
             <span className="text-[#ff5a1f] tracking-[0.05em]">THE</span>
             <br />
             <span className="text-[#ff5a1f] tracking-[0.05em]">UNIVERSE</span>
           </h1>
+        </div> */}
+        <div className="relative z-30 pointer-events-none mx-auto flex max-w-6xl flex-col items-center text-center">
+
+          {/* Small brand statement */}
+          <div
+            className="mb-3 text-[11px] font-semibold uppercase tracking-[0.45em] text-neutral-500 sm:text-xs"
+            style={{ fontFamily: 'var(--font-display), sans-serif' }}
+          >
+            In The Night
+          </div>
+
+          {/* Main headline */}
+          <h1 className="font-black uppercase leading-[0.82] tracking-[-0.045em]" style={{ fontFamily: 'var(--font-display), sans-serif' }}>
+
+            <span className="block text-[clamp(4rem,10vw,9rem)] text-white">
+              DROP
+            </span>
+
+            <span className="relative z-10 block text-[clamp(4.5rem,11vw,10rem)] text-[#ff5a1f]">
+              THE
+            </span>
+
+            <span className="relative z-20 block text-[clamp(4.5rem,12vw,11rem)] text-white">
+              UNIVERSE
+            </span>
+
+          </h1>
+
+          {/* Small supporting line */}
+          <p className="mt-7 max-w-md text-sm leading-6 text-neutral-500 sm:text-base">
+            One room. Every device.
+            <span className="text-neutral-300"> Everything in sync.</span>
+          </p>
+
         </div>
 
         {/* 3D Dotted Rotating & Draggable Globe Canvas */}
@@ -90,57 +124,29 @@ export default function HomePage() {
           <GlobeScene />
         </div>
 
-        {/* Left Information Callout Box with Exact Orange Bracket Corners */}
-        <div className="hidden lg:block absolute left-[3%] xl:left-[6%] top-[230px] z-20 w-[270px] bg-[#111111]/90 p-5 backdrop-blur-md shadow-2xl">
-          {/* Corner bracket accents */}
-          <div className="absolute top-0 left-0 w-3.5 h-3.5 border-t-2 border-l-2 border-[#ff5a1f]" />
-          <div className="absolute top-0 right-0 w-3.5 h-3.5 border-t-2 border-r-2 border-[#ff5a1f]" />
-          <div className="absolute bottom-0 left-0 w-3.5 h-3.5 border-b-2 border-l-2 border-[#ff5a1f]" />
-          <div className="absolute bottom-0 right-0 w-3.5 h-3.5 border-b-2 border-r-2 border-[#ff5a1f]" />
-          <div className="absolute inset-0 border border-dashed border-[#ff5a1f]/35 pointer-events-none" />
-
-          <h3 className="text-lg font-bold text-[#ff5a1f] leading-snug">4.5x faster</h3>
-          <p className="mt-2 text-xs text-[#ff5a1f]/90 leading-relaxed font-sans">
-            Faster for 95% of round trips by syncing peer clipboard directly near your backend.
-          </p>
-        </div>
-
-        {/* Right Information Callout Box with Exact Orange Bracket Corners */}
-        <div className="hidden lg:block absolute right-[3%] xl:right-[6%] top-[230px] z-20 w-[280px] bg-[#111111]/90 p-5 backdrop-blur-md shadow-2xl">
-          {/* Corner bracket accents */}
-          <div className="absolute top-0 left-0 w-3.5 h-3.5 border-t-2 border-l-2 border-[#ff5a1f]" />
-          <div className="absolute top-0 right-0 w-3.5 h-3.5 border-t-2 border-r-2 border-[#ff5a1f]" />
-          <div className="absolute bottom-0 left-0 w-3.5 h-3.5 border-b-2 border-l-2 border-[#ff5a1f]" />
-          <div className="absolute bottom-0 right-0 w-3.5 h-3.5 border-b-2 border-r-2 border-[#ff5a1f]" />
-          <div className="absolute inset-0 border border-dashed border-[#ff5a1f]/35 pointer-events-none" />
-
-          <p className="text-xs text-[#ff5a1f]/90 leading-relaxed font-sans">
-            <strong className="text-sm font-bold text-[#ff5a1f] block mb-1">95% Global Reach</strong>
-            of the world’s connected devices reached within 50ms for instant real-time sync.
-          </p>
-        </div>
-
         {/* Action Form Card */}
-        <div className="w-full max-w-2xl sm:max-w-3xl z-20 mt-[210px] sm:mt-[250px] bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 rounded-3xl p-3.5 sm:p-5 shadow-2xl backdrop-blur-xl flex flex-col gap-4 transition-all">
-          <form onSubmit={handleOpenCustom} className="flex flex-col sm:flex-row gap-3">
+        <div className="absolute right-6 bottom-8 w-[32rem] max-w-[90vw] z-20 bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 rounded-[2rem] p-2 shadow-2xl backdrop-blur-xl flex flex-col gap-4 transition-all">
+          <form onSubmit={handleOpenCustom} className="flex items-center gap-3">
             <input
               type="text"
-              placeholder="Enter room name (e.g. my-desk)..."
+              placeholder="Enter room name"
               value={customRoom}
               onChange={(e) => setCustomRoom(e.target.value)}
-              className="flex-1 px-5 sm:px-6 py-4 sm:py-4.5 rounded-2xl bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder:text-zinc-600 text-base sm:text-lg font-mono focus:outline-none focus:border-[#ff5a1f]/70 transition-colors"
+              className="flex-1 px-4 py-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder:text-zinc-500 text-base sm:text-lg font-medium tracking-[0.02em] focus:outline-none focus:border-[#ff5a1f]/70 transition-colors"
+              style={{ fontFamily: 'var(--font-display), sans-serif' }}
             />
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center">
               <button
                 type="submit"
-                className="px-6 sm:px-7 py-4 sm:py-4.5 rounded-2xl bg-[#ff5a1f] hover:bg-[#ff6d36] text-white text-sm sm:text-base font-bold transition-all flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-[#ff5a1f]/20 hover:scale-[1.02]"
+                className="px-5 sm:px-6 py-3 rounded-2xl bg-[#ff5a1f] hover:bg-[#ff6d36] text-white text-base sm:text-lg font-semibold tracking-[0.02em] transition-all flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-[#ff5a1f]/20 hover:scale-[1.02]"
+                style={{ fontFamily: 'var(--font-display), sans-serif' }}
               >
-                <span>Open Room</span>
+                <span>Open room</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              <button
+              {/* <button
                 type="button"
                 onClick={handleCreateRandom}
                 disabled={isGenerating}
@@ -149,7 +155,7 @@ export default function HomePage() {
               >
                 <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
                 <span>{isGenerating ? 'Creating...' : 'Short Code'}</span>
-              </button>
+              </button> */}
             </div>
           </form>
         </div>

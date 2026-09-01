@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono, Orbitron } from 'next/font/google';
 import './globals.css';
 
 const inter = Inter({
@@ -11,6 +11,12 @@ const inter = Inter({
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
+  display: 'swap',
+});
+
+const orbitron = Orbitron({
+  subsets: ['latin'],
+  variable: '--font-display',
   display: 'swap',
 });
 
@@ -31,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable} ${orbitron.variable}`}>
       <body className="bg-grid-pattern min-h-screen flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200 antialiased font-sans text-zinc-100">
         {children}
       </body>
