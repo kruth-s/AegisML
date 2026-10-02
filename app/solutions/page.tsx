@@ -21,6 +21,7 @@ import {
   Layers,
   CheckCircle2,
   Mic,
+  PenTool,
 } from 'lucide-react';
 
 export default function SolutionsPage() {
@@ -281,6 +282,22 @@ export default function SolutionsPage() {
             <div className="mt-auto pt-2 flex items-center gap-2 text-xs font-mono text-[#ff5a1f]">
               <ExternalLink className="w-3.5 h-3.5" />
               <span>Multi-link vertical stack</span>
+            </div>
+          </div>
+
+          {/* Solution Pillar 6: Touch Whiteboard & Sketch Drop */}
+          <div className="p-6 rounded-3xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 transition-all flex flex-col gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <PenTool className="w-6 h-6" />
+            </div>
+            <h4 className="text-lg font-bold text-white">1-Tap Sketch to Drop</h4>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Sketch a quick diagram, signature, arrow, or handwritten note on your phone or tablet
+              touchscreen. Tap "Drop to Room" and it appears instantly on your laptop monitor.
+            </p>
+            <div className="mt-auto pt-2 flex items-center gap-2 text-xs font-mono text-emerald-400">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Zero-latency PNG beam</span>
             </div>
           </div>
         </div>

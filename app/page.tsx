@@ -71,11 +71,12 @@ export default function HomePage() {
       <Navbar />
 
       {/* Cloudflare-style Globe Hero Section */}
-      <section className="relative flex-1 min-h-[calc(100dvh-56px)] sm:min-h-[calc(100vh-80px)] w-full max-w-[100vw] overflow-hidden flex flex-col items-center justify-between sm:justify-start pt-1 sm:pt-4 pb-4 sm:pb-0 px-3 sm:px-6">
+      <section className="relative flex-1 min-h-[calc(100dvh-56px)] sm:min-h-[calc(100vh-80px)] w-full max-w-[100vw] overflow-hidden flex flex-col items-center justify-start pt-1 sm:pt-4 pb-4 sm:pb-0 px-3 sm:px-6">
         {/* Subtle background glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[500px] h-[350px] bg-[#ff5a1f]/10 blur-[140px] rounded-full pointer-events-none -z-10" />
 
-        <div className="relative z-30 pointer-events-none mx-auto flex max-w-6xl flex-col items-center text-center px-2 pt-1 sm:pt-2">
+        {/* Hero Content Wrapper containing Headline + 3D Globe */}
+        <div className="relative w-full max-w-6xl h-[440px] sm:h-auto flex flex-col items-center text-center px-2 pt-1 sm:pt-2">
           {/* Small brand statement */}
           <div
             className="mb-1 sm:mb-2 text-[10px] font-semibold uppercase tracking-[0.45em] text-neutral-500 sm:text-xs"
@@ -85,7 +86,7 @@ export default function HomePage() {
           </div>
 
           {/* Main headline */}
-          <h1 className="font-black uppercase leading-[0.88] tracking-[-0.035em] max-w-full" style={{ fontFamily: 'var(--font-display), sans-serif' }}>
+          <h1 className="relative z-30 font-black uppercase leading-[0.88] tracking-[-0.035em] max-w-full pointer-events-none" style={{ fontFamily: 'var(--font-display), sans-serif' }}>
             <span className="block text-[clamp(3.1rem,11.5vw,7.5rem)] text-white">
               DROP
             </span>
@@ -100,18 +101,18 @@ export default function HomePage() {
           </h1>
 
           {/* Small supporting line */}
-          <p className="mt-2 sm:mt-7 max-w-md text-xs leading-snug sm:leading-5 text-neutral-500 sm:text-base">
+          <p className="relative z-30 pointer-events-none mt-2 sm:mt-7 max-w-md text-xs leading-snug sm:leading-5 text-neutral-500 sm:text-base">
             One room. Every device.
             <span className="text-neutral-300"> Everything in sync.</span>
           </p>
+
+          {/* 3D Dotted Rotating & Draggable Globe Canvas */}
+          <div className="absolute left-1/2 top-[65px] sm:top-[95px] h-[375px] w-[375px] sm:h-[500px] sm:w-[500px] lg:h-[580px] lg:w-[580px] -translate-x-1/2 pointer-events-auto z-10 max-w-[98vw] overflow-hidden">
+            <GlobeScene />
+          </div>
         </div>
 
-        {/* 3D Dotted Rotating & Draggable Globe Canvas */}
-        <div className="absolute left-1/2 top-[75px] sm:top-[95px] h-[280px] w-[280px] sm:h-[500px] sm:w-[500px] lg:h-[580px] lg:w-[580px] -translate-x-1/2 pointer-events-auto z-10 max-w-[95vw] overflow-hidden">
-          <GlobeScene />
-        </div>
-
-        {/* Action Form Card */}
+        {/* Action Form Card directly underneath the globe */}
         <div className="relative sm:absolute sm:right-6 sm:bottom-8 w-full sm:w-[32rem] max-w-[94vw] sm:max-w-[90vw] mx-auto z-30 bg-zinc-900/95 border border-zinc-800 hover:border-zinc-700 rounded-2xl sm:rounded-[2rem] p-2 sm:p-2 shadow-2xl backdrop-blur-xl mt-3 sm:mt-auto mb-2 sm:mb-0 transition-all">
           <form onSubmit={handleOpenCustom} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full">
             <input

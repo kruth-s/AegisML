@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Camera, Upload, Loader2, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { Camera, Upload, Loader2, Sparkles, Image as ImageIcon, PenTool } from 'lucide-react';
 import { VoiceRecorder } from './VoiceRecorder';
+import { DoodleModal } from './DoodleModal';
 
 interface FileUploadProps {
   slug: string;
@@ -12,6 +13,7 @@ interface FileUploadProps {
 
 export const FileUpload: React.FC<FileUploadProps> = ({ slug, onUploaded, onShowToast }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [isDoodleOpen, setIsDoodleOpen] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -174,6 +176,18 @@ export const FileUpload: React.FC<FileUploadProps> = ({ slug, onUploaded, onShow
             <span>Snap to Drop</span>
           </button>
 
+          {/* Sketch to Drop (Touch Whiteboard & Doodle) */}
+          <button
+            type="button"
+            onClick={() => setIsDoodleOpen(true)}
+            disabled={isUploading}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 text-xs font-semibold transition-all hover:scale-[1.02] disabled:opacity-50"
+            title="Open touch whiteboard to sketch & drop"
+          >
+            <PenTool className="w-4 h-4 text-emerald-400" />
+            <span>Sketch to Drop</span>
+          </button>
+
           {/* 1-Tap Voice Memo Drop */}
           <VoiceRecorder slug={slug} onUploaded={onUploaded} onShowToast={onShowToast} />
 
@@ -189,6 +203,18 @@ export const FileUpload: React.FC<FileUploadProps> = ({ slug, onUploaded, onShow
           </button>
         </div>
       </div>
+
+      {/* Touch Whiteboard Doodle Modal */}
+      {isDoodleOpen && (
+        <DoodleModal
+          isOpen={isDoodleOpen}
+          onClose={() => setIsDoodleOpen(false)}
+          onDropDoodle={async (file) => {
+            await handleFile(file);
+          }}
+          slug={slug}
+        />
+      )}
     </div>
   );
 };
