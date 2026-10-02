@@ -383,9 +383,9 @@ export default function ClipRoomPage() {
 
       <Navbar currentRoom={slug} onOpenQR={() => setIsQRModalOpen(true)} isSyncing={isSyncing} />
 
-      <main className="flex-1 max-w-5xl sm:max-w-6xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-4 sm:gap-6">
+      <main className="flex-1 max-w-5xl sm:max-w-6xl w-full mx-auto px-2.5 sm:px-6 lg:px-8 py-3 sm:py-8 flex flex-col gap-3.5 sm:gap-6">
         {/* Navigation Breadcrumb & Room Title Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 sm:p-4 shadow-sm backdrop-blur-md">
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3 sm:p-4 shadow-sm backdrop-blur-md">
           <div className="flex items-center gap-2.5 sm:gap-3">
             <Link
               href="/"
@@ -421,7 +421,7 @@ export default function ClipRoomPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto justify-end">
             <button
               onClick={() => fetchRoomData()}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 hover:bg-zinc-900 text-zinc-300 text-xs font-mono transition-colors"

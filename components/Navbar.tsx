@@ -78,17 +78,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoom, onOpenQR, isSyncing
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-[#111111] text-zinc-100 select-none">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-6">
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2 sm:gap-6">
 
         {/* Left: Brand Logo & Wordmark (Cloudflare Style) */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+        <Link href="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0 group">
           {/* Vibrant Orange Cloud Logo */}
-          <div className="w-8 h-6 flex items-center justify-center text-[#ff5a1f] group-hover:scale-105 transition-transform">
+          <div className="w-7 h-5 sm:w-8 sm:h-6 flex items-center justify-center text-[#ff5a1f] group-hover:scale-105 transition-transform shrink-0">
             <svg viewBox="0 0 48 32" fill="currentColor" className="w-full h-full">
               <path d="M37.5 12C36.8 5.4 31.2 0.2 24.4 0.2c-5.4 0-10.1 3.2-12.2 7.8C5.4 8.7 0 14.5 0 21.4 0 27.2 4.8 32 10.6 32h26.9c5.8 0 10.5-4.7 10.5-10.5 0-5.3-4-9.7-9.3-10.4l-1.2-.1z" />
             </svg>
           </div>
-          <span className="font-extrabold tracking-[0.2em] text-sm text-white uppercase group-hover:text-zinc-200 transition-colors">
+          <span className="font-extrabold tracking-[0.14em] sm:tracking-[0.2em] text-xs sm:text-sm text-white uppercase group-hover:text-zinc-200 transition-colors shrink-0">
             THE DROP
           </span>
         </Link>
@@ -255,24 +255,24 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoom, onOpenQR, isSyncing
         </nav>
 
         {/* Right: Cloudflare-Style Action Buttons */}
-        <div className="flex items-center gap-3.5 shrink-0" ref={dropdownRef}>
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0" ref={dropdownRef}>
           <button
             onClick={handleCreateNew}
-            className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-transparent px-3 py-1.5 text-xs font-medium text-zinc-100 transition-colors hover:border-zinc-500 hover:bg-zinc-900"
+            className="inline-flex items-center gap-1 sm:gap-2 rounded-full border border-zinc-700 bg-transparent px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-medium text-zinc-100 transition-colors hover:border-zinc-500 hover:bg-zinc-900 shrink-0"
           >
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#ff5a1f] text-[10px] font-bold text-white">+</span>
+            <span className="flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-[#ff5a1f] text-[9px] sm:text-[10px] font-bold text-white">+</span>
             <span>New Room</span>
           </button>
 
           {/* Dashboard Button (Pill style with Recent Rooms Dropdown) */}
-          <div className="relative">
+          <div className="relative shrink-0">
             <button
               onClick={() => setIsDashboardOpen(!isDashboardOpen)}
-              className="px-3.5 sm:px-4 py-1.5 rounded-full border border-zinc-700 hover:border-zinc-500 bg-transparent text-xs text-zinc-100 font-medium hover:bg-zinc-900 transition-all flex items-center gap-1.5"
+              className="px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full border border-zinc-700 hover:border-zinc-500 bg-transparent text-[11px] sm:text-xs text-zinc-100 font-medium hover:bg-zinc-900 transition-all flex items-center gap-1 sm:gap-1.5 shrink-0"
             >
               <span>Dashboard</span>
               {currentRoom && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               )}
             </button>
 
