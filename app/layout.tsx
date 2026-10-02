@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono, Orbitron } from 'next/font/google';
 import './globals.css';
 
@@ -20,6 +20,13 @@ const orbitron = Orbitron({
   display: 'swap',
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: 'The Drop',
   description: 'Instantly paste and share text, code snippets, and notes across all your devices in real-time. Zero sign-up, instant QR pairing.',
@@ -37,8 +44,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable} ${orbitron.variable}`}>
-      <body className="bg-grid-pattern min-h-screen flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200 antialiased font-sans text-zinc-100">
+    <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable} ${orbitron.variable} overflow-x-hidden`}>
+      <body className="bg-grid-pattern min-h-screen w-full max-w-[100vw] overflow-x-hidden flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200 antialiased font-sans text-zinc-100">
         {children}
       </body>
     </html>

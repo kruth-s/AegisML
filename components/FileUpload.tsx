@@ -161,7 +161,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ slug, onUploaded, onShow
         </div>
 
         {/* Right Action Buttons */}
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-stretch sm:justify-end">
           {/* Snap to Drop (Direct Camera on Mobile) */}
           <button
             type="button"

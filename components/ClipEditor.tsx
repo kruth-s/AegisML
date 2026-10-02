@@ -164,10 +164,10 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
   return (
     <div className="w-full flex flex-col bg-zinc-900/90 rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden backdrop-blur-xl">
       {/* Editor Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 bg-zinc-950/90 border-b border-zinc-800/80">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 px-3.5 sm:px-5 py-3 sm:py-3.5 bg-zinc-950/90 border-b border-zinc-800/80">
         {/* Left Status & Type Indicator */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -273,7 +273,7 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
         </div>
 
         {/* Right Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {/* Format Button if JSON or ENV */}
           {(detection.kind === 'json' || detection.kind === 'env') && (
             <button

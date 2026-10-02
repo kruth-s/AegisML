@@ -46,7 +46,7 @@ export default function SolutionsPage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-12 sm:pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col items-center text-center">
         {/* Glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-[#ff5a1f]/10 blur-[150px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[500px] h-[350px] bg-[#ff5a1f]/10 blur-[150px] rounded-full pointer-events-none -z-10" />
 
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ff5a1f]/10 border border-[#ff5a1f]/30 text-[#ff5a1f] text-xs font-mono font-semibold uppercase tracking-wider mb-6">
           <Sparkles className="w-3.5 h-3.5" />

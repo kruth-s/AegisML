@@ -377,39 +377,30 @@ export default function ClipRoomPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-zinc-950 text-zinc-100 font-sans relative">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden flex flex-col justify-between bg-zinc-950 text-zinc-100 font-sans relative">
       {/* Background Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[#ff5a1f]/10 blur-[140px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[500px] h-[350px] bg-[#ff5a1f]/10 blur-[140px] rounded-full pointer-events-none -z-10" />
 
       <Navbar currentRoom={slug} onOpenQR={() => setIsQRModalOpen(true)} isSyncing={isSyncing} />
 
-      <main className="flex-1 max-w-5xl sm:max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+      <main className="flex-1 max-w-5xl sm:max-w-6xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-4 sm:gap-6">
         {/* Navigation Breadcrumb & Room Title Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 shadow-sm backdrop-blur-md">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 sm:p-4 shadow-sm backdrop-blur-md">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <Link
               href="/"
-              className="p-2 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
+              className="p-2 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all shrink-0"
               title="Back to Home"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+              <h1 className="text-base sm:text-xl font-bold text-white flex flex-wrap items-center gap-2">
                 <span className="text-zinc-400 font-medium">Room:</span>
                 <span className="font-mono text-[#ff5a1f]">{slug}</span>
-                {isSseActive && (
-                  <span
-                    className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400 font-semibold"
-                    title="Server-Sent Events active: sub-50ms live push"
-                  >
-                    <Zap className="w-2.5 h-2.5 fill-current" />
-                    <span>Live 50ms Push</span>
-                  </span>
-                )}
                 {remoteTypingUser && (
                   <span
-                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border shadow-sm animate-pulse"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-mono font-bold border shadow-sm animate-pulse"
                     style={{
                       backgroundColor: `${remoteTypingUser.color}25`,
                       borderColor: `${remoteTypingUser.color}80`,
@@ -424,13 +415,13 @@ export default function ClipRoomPage() {
                   </span>
                 )}
               </h1>
-              <p className="text-xs text-zinc-500">
+              <p className="text-[11px] sm:text-xs text-zinc-500 mt-0.5">
                 Share this room URL or scan QR code to access clipboard live across devices.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button
               onClick={() => fetchRoomData()}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 hover:bg-zinc-900 text-zinc-300 text-xs font-mono transition-colors"
