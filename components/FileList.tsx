@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { FileItem } from '@/lib/types';
-import { Download, Trash2, ScanText, FileText, Image as ImageIcon } from 'lucide-react';
+import { Download, Trash2, ScanText, FileText, Eye, Image as ImageIcon } from 'lucide-react';
 import { OcrModal } from './OcrModal';
 import { AudioPlayerCard } from './AudioPlayerCard';
+import { FilePreviewModal, isPdf, isImage, isAudio } from './FilePreviewModal';
 
 interface FileListProps {
   files?: FileItem[];
@@ -21,29 +22,6 @@ function formatBytes(bytes: number) {
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
 }
 
-function isImageFile(filename?: string, contentType?: string, url?: string): boolean {
-  const cType = (contentType || '').toLowerCase();
-  const name = (filename || '').toLowerCase();
-  const fileUrl = (url || '').toLowerCase();
-
-  if (cType.includes('image') || /^(png|jpe?g|webp|gif|svg|bmp|tiff|heic)$/i.test(cType)) return true;
-  if (/\.(jpe?g|png|webp|gif|svg|bmp|tiff|heic)$/i.test(name)) return true;
-  if (name.includes('screenshot') || name.includes('snap') || name.includes('photo') || name.startsWith('img_')) return true;
-  if (fileUrl.startsWith('data:image/') || fileUrl.includes('/image/upload/') || /\.(jpe?g|png|webp|gif|svg|bmp|tiff)(\?.*)?$/i.test(fileUrl)) return true;
-  return false;
-}
-
-function isAudioFile(filename?: string, contentType?: string, url?: string): boolean {
-  const cType = (contentType || '').toLowerCase();
-  const name = (filename || '').toLowerCase();
-  const fileUrl = (url || '').toLowerCase();
-
-  if (cType.includes('audio') || cType.includes('opus') || /^(webm|mp3|wav|ogg|m4a|aac|flac)$/i.test(cType)) return true;
-  if (/\.(webm|wav|mp3|m4a|ogg|aac|flac)$/i.test(name) || name.includes('voice_note') || name.includes('audio')) return true;
-  if (fileUrl.startsWith('data:audio/') || (fileUrl.includes('/video/upload/') && name.includes('voice'))) return true;
-  return false;
-}
-
 export const FileList: React.FC<FileListProps> = ({
   files,
   slug,
@@ -54,6 +32,7 @@ export const FileList: React.FC<FileListProps> = ({
   const [selectedOcrImage, setSelectedOcrImage] = useState<{ url: string; name: string } | null>(
     null
   );
+  const [selectedPreviewFile, setSelectedPreviewFile] = useState<FileItem | null>(null);
 
   const handleDeleteFile = async (fileId: string, filename?: string) => {
     if (!confirm(`Delete ${filename ? `"${filename}"` : 'this file'}?`)) return;
@@ -100,10 +79,11 @@ export const FileList: React.FC<FileListProps> = ({
 
       <div className="grid grid-cols-1 gap-2.5">
         {files.map((f) => {
-          const isAudio = isAudioFile(f.filename, f.contentType, f.url);
-          const isImg = isImageFile(f.filename, f.contentType, f.url);
+          const audio = isAudio(f);
+          const img = isImage(f);
+          const pdf = isPdf(f);
 
-          if (isAudio) {
+          if (audio) {
             return (
               <AudioPlayerCard
                 key={f.id}
@@ -124,8 +104,23 @@ export const FileList: React.FC<FileListProps> = ({
             >
               {/* Left Details & Thumbnail */}
               <div className="flex items-center gap-3 min-w-0">
-                {isImg ? (
-                  <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden shrink-0 flex items-center justify-center">
+                {pdf ? (
+                  <div
+                    onClick={() => setSelectedPreviewFile(f)}
+                    className="w-12 h-12 rounded-xl bg-rose-950/40 border border-rose-500/30 flex flex-col items-center justify-center shrink-0 text-rose-400 cursor-pointer hover:border-rose-500/60 hover:scale-105 transition-all"
+                    title="Click to view PDF"
+                  >
+                    <FileText className="w-5 h-5 text-rose-400" />
+                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-rose-300 mt-0.5">
+                      PDF
+                    </span>
+                  </div>
+                ) : img ? (
+                  <div
+                    onClick={() => setSelectedPreviewFile(f)}
+                    className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden shrink-0 flex items-center justify-center cursor-pointer hover:border-zinc-750 hover:scale-105 transition-all"
+                    title="Click to view full image"
+                  >
                     <img
                       src={f.url}
                       alt={f.filename}
@@ -133,13 +128,21 @@ export const FileList: React.FC<FileListProps> = ({
                     />
                   </div>
                 ) : (
-                  <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 text-zinc-400">
+                  <div
+                    onClick={() => setSelectedPreviewFile(f)}
+                    className="w-12 h-12 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 text-zinc-400 cursor-pointer hover:border-zinc-750 hover:scale-105 transition-all"
+                    title="Click to view file"
+                  >
                     <FileText className="w-5 h-5" />
                   </div>
                 )}
 
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-zinc-100 truncate max-w-xs sm:max-w-md">
+                  <div
+                    onClick={() => setSelectedPreviewFile(f)}
+                    className="text-sm font-semibold text-zinc-100 truncate max-w-xs sm:max-w-md cursor-pointer hover:text-white hover:underline transition-colors"
+                    title="Click to view"
+                  >
                     {f.filename}
                   </div>
                   <div className="text-[11px] text-zinc-500 font-mono mt-0.5">
@@ -149,25 +152,40 @@ export const FileList: React.FC<FileListProps> = ({
               </div>
 
               {/* Right Action Buttons */}
-              <div className="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
-                {/* In-Browser OCR Button for Photos */}
-                {isImg && (
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 ml-auto sm:ml-0">
+                {/* View Button */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedPreviewFile(f)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 hover:border-zinc-600 text-xs font-semibold transition-all shadow-sm"
+                  title="View / Preview file"
+                >
+                  <Eye className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>View</span>
+                </button>
+
+                {/* In-Browser OCR Button strictly for Photos/Images */}
+                {img && (
                   <button
+                    type="button"
                     onClick={() => setSelectedOcrImage({ url: f.url, name: f.filename })}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#ff5a1f]/10 hover:bg-[#ff5a1f]/20 border border-[#ff5a1f]/30 text-[#ff5a1f] text-xs font-semibold transition-all hover:scale-[1.02]"
                     title="Extract text or code from image"
                   >
                     <ScanText className="w-3.5 h-3.5" />
-                    <span>Extract Text (OCR)</span>
+                    <span className="hidden sm:inline">Extract Text (OCR)</span>
+                    <span className="sm:hidden">OCR</span>
                   </button>
                 )}
 
                 {/* Open / Download */}
                 <a
                   href={f.url}
+                  download={f.filename}
                   target="_blank"
                   rel="noreferrer"
                   className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+                  title="Download file"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download</span>
@@ -175,6 +193,7 @@ export const FileList: React.FC<FileListProps> = ({
 
                 {/* Delete */}
                 <button
+                  type="button"
                   onClick={async () => {
                     if (!confirm(`Delete "${f.filename}"?`)) return;
                     try {
@@ -205,6 +224,16 @@ export const FileList: React.FC<FileListProps> = ({
           );
         })}
       </div>
+
+      {/* Full File Preview Modal */}
+      {selectedPreviewFile && (
+        <FilePreviewModal
+          isOpen={!!selectedPreviewFile}
+          onClose={() => setSelectedPreviewFile(null)}
+          file={selectedPreviewFile}
+          onExtractOcr={(img) => setSelectedOcrImage(img)}
+        />
+      )}
 
       {/* OCR Modal */}
       {selectedOcrImage && (

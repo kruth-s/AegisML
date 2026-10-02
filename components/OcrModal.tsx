@@ -140,22 +140,42 @@ export const OcrModal: React.FC<OcrModalProps> = ({
           {/* Body */}
           <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-5">
             {/* Image Preview Thumbnail */}
-            <div className="relative w-full h-44 sm:h-52 rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden flex items-center justify-center">
-              <img
-                src={imageUrl}
-                alt="Source preview"
-                className="w-full h-full object-contain"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+            <div className="relative w-full min-h-[180px] sm:h-52 rounded-2xl bg-zinc-900 border border-zinc-800 overflow-hidden flex items-center justify-center">
+              {((imageName || '').toLowerCase().endsWith('.pdf') || imageUrl.toLowerCase().includes('.pdf')) ? (
+                <div className="flex flex-col items-center justify-center p-6 text-center">
+                  <FileText className="w-10 h-10 text-rose-400 mb-2" />
+                  <span className="text-white font-bold text-sm">PDF Document</span>
+                  <p className="text-xs text-zinc-400 mt-1 max-w-sm">
+                    In-browser OCR runs on raster photos (PNG, JPG, WebP). To view or copy text from this PDF, use the View button or open it in a tab.
+                  </p>
+                  <a
+                    href={imageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold flex items-center gap-1.5"
+                  >
+                    <span>Open PDF in Tab</span>
+                  </a>
+                </div>
+              ) : (
+                <>
+                  <img
+                    src={imageUrl}
+                    alt="Source preview"
+                    className="w-full h-full object-contain"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
-              {!hasScanned && !isScanning && (
-                <button
-                  onClick={runOCR}
-                  className="absolute z-10 px-5 py-2.5 rounded-2xl bg-[#ff5a1f] hover:bg-[#ff6d36] text-white font-bold text-sm shadow-xl shadow-[#ff5a1f]/30 flex items-center gap-2 hover:scale-105 transition-all"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Start OCR Scan</span>
-                </button>
+                  {!hasScanned && !isScanning && (
+                    <button
+                      onClick={runOCR}
+                      className="absolute z-10 px-5 py-2.5 rounded-2xl bg-[#ff5a1f] hover:bg-[#ff6d36] text-white font-bold text-sm shadow-xl shadow-[#ff5a1f]/30 flex items-center gap-2 hover:scale-105 transition-all"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Start OCR Scan</span>
+                    </button>
+                  )}
+                </>
               )}
             </div>
 
