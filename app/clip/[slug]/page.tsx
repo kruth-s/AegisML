@@ -139,7 +139,17 @@ export default function ClipRoomPage() {
         const data = await res.json();
         if (data.success && data.data) {
           const serverRoom: ClipboardRoom = data.data;
-          setRoomData(serverRoom);
+          setRoomData((prev) => {
+            const mergedFiles =
+              serverRoom.files && serverRoom.files.length > 0
+                ? serverRoom.files
+                : (prev?.files && prev.files.length > 0 ? prev.files : serverRoom.files || []);
+
+            return {
+              ...serverRoom,
+              files: mergedFiles,
+            };
+          });
 
           if (!isTypingRef.current) {
             setMainContent(serverRoom.mainContent || '');
@@ -172,7 +182,18 @@ export default function ClipRoomPage() {
         try {
           const payload = JSON.parse(e.data);
           if (payload.room) {
-            setRoomData(payload.room);
+            setRoomData((prev) => {
+              const mergedFiles =
+                payload.room.files && payload.room.files.length > 0
+                  ? payload.room.files
+                  : (prev?.files && prev.files.length > 0 ? prev.files : payload.room.files || []);
+
+              return {
+                ...payload.room,
+                files: mergedFiles,
+              };
+            });
+
             if (!isTypingRef.current) {
               setMainContent(payload.room.mainContent || '');
             }
@@ -215,7 +236,17 @@ export default function ClipRoomPage() {
       es.addEventListener('update', (e: MessageEvent) => {
         try {
           const updated: ClipboardRoom = JSON.parse(e.data);
-          setRoomData(updated);
+          setRoomData((prev) => {
+            const mergedFiles =
+              updated.files && updated.files.length > 0
+                ? updated.files
+                : (prev?.files && prev.files.length > 0 ? prev.files : updated.files || []);
+
+            return {
+              ...updated,
+              files: mergedFiles,
+            };
+          });
 
           // Update editor content instantly if local user is not actively typing
           if (!isTypingRef.current) {
@@ -450,7 +481,14 @@ export default function ClipRoomPage() {
           <FileList
             files={roomData?.files}
             slug={slug}
-            onDeleted={() => fetchRoomData()}
+            onDeleted={(deletedId) => {
+              if (deletedId) {
+                setRoomData((prev) =>
+                  prev ? { ...prev, files: (prev.files || []).filter((f) => f.id !== deletedId) } : prev
+                );
+              }
+              fetchRoomData(true);
+            }}
             onInsertIntoClipboard={(text) => {
               const nextContent = mainContent ? `${mainContent}\n\n${text}` : text;
               handleMainContentChange(nextContent);

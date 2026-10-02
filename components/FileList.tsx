@@ -9,7 +9,7 @@ import { AudioPlayerCard } from './AudioPlayerCard';
 interface FileListProps {
   files?: FileItem[];
   slug?: string;
-  onDeleted?: () => void;
+  onDeleted?: (fileId?: string) => void;
   onInsertIntoClipboard?: (text: string) => void;
   onShowToast?: (text: string, type?: 'success' | 'error' | 'info') => void;
 }
@@ -70,7 +70,7 @@ export const FileList: React.FC<FileListProps> = ({
       const json = await res.json();
       if (!json.success) throw new Error(json.error || 'Delete failed');
       onShowToast?.('File removed from room', 'info');
-      onDeleted && onDeleted();
+      onDeleted && onDeleted(fileId);
     } catch (e: any) {
       onShowToast?.(e.message || 'Failed to delete file', 'error');
     }
@@ -190,7 +190,7 @@ export const FileList: React.FC<FileListProps> = ({
                       const json = await res.json();
                       if (!json.success) throw new Error(json.error || 'Delete failed');
                       onShowToast?.('File removed from room', 'info');
-                      onDeleted && onDeleted();
+                      onDeleted && onDeleted(f.id);
                     } catch (e: any) {
                       onShowToast?.(e.message || 'Failed to delete file', 'error');
                     }

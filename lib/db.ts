@@ -14,12 +14,7 @@ const memoryStore = new Map<string, ClipboardRoom>();
 export async function getClipboard(slug: string): Promise<ClipboardRoom | null> {
   const normalizedSlug = slug.toLowerCase().trim();
 
-  // 1. Memory cache
-  if (memoryStore.has(normalizedSlug)) {
-    return memoryStore.get(normalizedSlug)!;
-  }
-
-  // 2. Redis (persistent, cross-invocation)
+  // 1. Query Redis first for distributed consistency across Vercel lambdas
   if (redis) {
     try {
       const raw = await redis.get<ClipboardRoom>(`clip:${normalizedSlug}`);
@@ -32,23 +27,37 @@ export async function getClipboard(slug: string): Promise<ClipboardRoom | null> 
     }
   }
 
+  // 2. Memory cache fallback
+  if (memoryStore.has(normalizedSlug)) {
+    return memoryStore.get(normalizedSlug)!;
+  }
+
   return null;
 }
 
 export async function saveClipboard(slug: string, data: Partial<ClipboardRoom>): Promise<ClipboardRoom> {
   const normalizedSlug = slug.toLowerCase().trim();
+
+  // Always retrieve the freshest state from Redis/memory
   const existing = (await getClipboard(normalizedSlug)) || {
     slug: normalizedSlug,
     mainContent: '',
     snippets: [],
+    files: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     views: 0,
   };
 
+  // Crucial: Never drop existing files or snippets if partial data was sent (e.g. during typing)
+  const mergedFiles = data.files !== undefined ? data.files : (existing.files || []);
+  const mergedSnippets = data.snippets !== undefined ? data.snippets : (existing.snippets || []);
+
   const updatedRoom: ClipboardRoom = {
     ...existing,
     ...data,
+    files: mergedFiles,
+    snippets: mergedSnippets,
     slug: normalizedSlug,
     updatedAt: new Date().toISOString(),
   };
