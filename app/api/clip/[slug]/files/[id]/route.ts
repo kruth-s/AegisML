@@ -37,7 +37,12 @@ export async function DELETE(
 
     // Attempt to delete from Cloudinary (best-effort)
     try {
-      if (file.publicId) {
+      if (
+        file.publicId &&
+        !file.publicId.startsWith('direct_') &&
+        process.env.CLOUDINARY_CLOUD_NAME &&
+        process.env.CLOUDINARY_API_KEY
+      ) {
         await cloudinary.uploader.destroy(file.publicId, { resource_type: 'auto' });
       }
     } catch (e) {

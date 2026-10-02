@@ -1,5 +1,6 @@
 import { ClipboardRoom } from './types';
 import { Redis } from '@upstash/redis';
+import { broadcastToRoom } from './events';
 
 // Lazily initialize Redis if credentials are provided
 const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -64,6 +65,9 @@ export async function saveClipboard(slug: string, data: Partial<ClipboardRoom>):
     }
   }
 
+  // Broadcast real-time SSE update (<50ms) to all active devices in room
+  broadcastToRoom(normalizedSlug, updatedRoom);
+
   return updatedRoom;
 }
 
@@ -81,6 +85,8 @@ export async function deleteClipboard(slug: string): Promise<boolean> {
       console.error('Failed deleting from Redis:', e);
     }
   }
+
+  broadcastToRoom(normalizedSlug, { slug: normalizedSlug, mainContent: '', snippets: [], files: [] });
 
   return true;
 }

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ClipItem } from '@/lib/types';
-import { Plus, Copy, Check, Trash2 } from 'lucide-react';
+import { Plus, Copy, Check, Trash2, ExternalLink } from 'lucide-react';
 
 interface SnippetsListProps {
   snippets: ClipItem[];
@@ -115,6 +115,17 @@ export const SnippetsList: React.FC<SnippetsListProps> = ({
                     {item.title || 'Untitled Snippet'}
                   </h4>
                   <div className="flex items-center gap-1">
+                    {item.content.trim().startsWith('http') && (
+                      <a
+                        href={item.content.trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 text-zinc-400 hover:text-[#ff5a1f] hover:bg-zinc-800 rounded-lg transition-colors"
+                        title="Open Link in New Tab"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
                     <button
                       onClick={() => handleCopy(item.id, item.content)}
                       className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"

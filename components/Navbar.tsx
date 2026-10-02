@@ -15,6 +15,7 @@ import {
   Shield,
   Layers,
   Search,
+  Camera,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -140,34 +141,68 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoom, onOpenQR, isSyncing
 
           {/* Solutions Dropdown */}
           <div className="relative group">
-            <button
-              onClick={() => setActiveMenu(activeMenu === 'solutions' ? null : 'solutions')}
-              className="hover:text-[#ff5a1f] transition-colors py-2"
+            <Link
+              href="/solutions"
+              onClick={() => setActiveMenu(null)}
+              onMouseEnter={() => setActiveMenu('solutions')}
+              className="hover:text-[#ff5a1f] transition-colors py-2 flex items-center gap-1"
             >
               <span>Solutions</span>
-            </button>
+            </Link>
 
             {activeMenu === 'solutions' && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-[#0d1017] border border-zinc-800 rounded-2xl shadow-2xl p-3 flex flex-col gap-2 z-50 animate-in fade-in zoom-in-95 duration-100">
-                <div className="p-2.5 rounded-xl hover:bg-zinc-900/80 transition-colors flex items-start gap-3 text-left">
+              <div
+                onMouseLeave={() => setActiveMenu(null)}
+                className="absolute top-full left-0 mt-2 w-72 bg-[#0d1017] border border-zinc-800 rounded-2xl shadow-2xl p-3 flex flex-col gap-2 z-50 animate-in fade-in zoom-in-95 duration-100"
+              >
+                <Link
+                  href="/solutions#snap-ocr"
+                  onClick={() => setActiveMenu(null)}
+                  className="p-2.5 rounded-xl hover:bg-zinc-900/80 transition-colors flex items-start gap-3 text-left"
+                >
+                  <div className="p-1.5 rounded-lg bg-[#ff5a1f]/10 text-[#ff5a1f]">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>Camera Snap & OCR</span>
+                      <span className="px-1.5 py-0.2 rounded bg-[#ff5a1f]/20 text-[#ff5a1f] text-[9px] uppercase font-bold">
+                        New
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-zinc-400">
+                      Snap on phone, extract text on laptop.
+                    </div>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/solutions"
+                  onClick={() => setActiveMenu(null)}
+                  className="p-2.5 rounded-xl hover:bg-zinc-900/80 transition-colors flex items-start gap-3 text-left"
+                >
                   <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
                     <QrCode className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-white">Mobile QR Pairing</div>
-                    <div className="text-[11px] text-zinc-400">Scan from camera to paste 2FA & links.</div>
+                    <div className="text-xs font-bold text-white">Mobile QR & Same-WiFi</div>
+                    <div className="text-[11px] text-zinc-400">Instant camera pairing without login.</div>
                   </div>
-                </div>
+                </Link>
 
-                <div className="p-2.5 rounded-xl hover:bg-zinc-900/80 transition-colors flex items-start gap-3 text-left">
-                  <div className="p-1.5 rounded-lg bg-[#ff5a1f]/10 text-[#ff5a1f]">
+                <Link
+                  href="/solutions"
+                  onClick={() => setActiveMenu(null)}
+                  className="p-2.5 rounded-xl hover:bg-zinc-900/80 transition-colors flex items-start gap-3 text-left"
+                >
+                  <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
                     <Shield className="w-4 h-4" />
                   </div>
                   <div>
                     <div className="text-xs font-bold text-white">Zero Account Privacy</div>
                     <div className="text-[11px] text-zinc-400">Ephemeral room memory, no cookies.</div>
                   </div>
-                </div>
+                </Link>
               </div>
             )}
           </div>

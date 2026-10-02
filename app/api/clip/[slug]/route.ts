@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClipboard, saveClipboard, deleteClipboard } from '@/lib/db';
+import { getActivePresence } from '@/lib/presence';
 import { APIResponse, ClipboardRoom } from '@/lib/types';
 
 export async function GET(
@@ -25,9 +26,15 @@ export async function GET(
       });
     }
 
+    // Attach currently active devices
+    const activeDevices = await getActivePresence(slug);
+
     return NextResponse.json<APIResponse<ClipboardRoom>>({
       success: true,
-      data: room,
+      data: {
+        ...room,
+        activeDevices,
+      },
     });
   } catch (error: any) {
     return NextResponse.json<APIResponse<null>>(

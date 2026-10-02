@@ -89,7 +89,7 @@ export default function HomePage() {
           {/* Small brand statement */}
           <div
             className="mb-3 text-[11px] font-semibold uppercase tracking-[0.45em] text-neutral-500 sm:text-xs"
-            style={{ fontFamily: 'var(--font-display), sans-serif' }}
+            style={{fontFamily: 'var(--font-display), sans-serif' }}
           >
             In The Night
           </div>

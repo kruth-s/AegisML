@@ -18,6 +18,20 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Slug required' }, { status: 400 });
     }
 
+    const hasCloudinary = Boolean(
+      process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET
+    );
+
+    if (!hasCloudinary) {
+      return NextResponse.json({
+        success: true,
+        useDirectUpload: true,
+        data: null,
+      });
+    }
+
     const body = await request.json();
     const folder = `the-drop/${slug}`;
     const timestamp = Math.floor(Date.now() / 1000);
@@ -26,7 +40,8 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-        data: {
+      useDirectUpload: false,
+      data: {
         cloudName: process.env.CLOUDINARY_CLOUD_NAME,
         apiKey: process.env.CLOUDINARY_API_KEY,
         timestamp,

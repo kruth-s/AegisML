@@ -9,8 +9,10 @@ import { QRCodeModal } from '@/components/QRCodeModal';
 import { FileUpload } from '@/components/FileUpload';
 import { FileList } from '@/components/FileList';
 import { Toast, ToastMessage } from '@/components/Toast';
-import { ClipboardRoom, ClipItem } from '@/lib/types';
-import { ArrowLeft, RefreshCw, Smartphone } from 'lucide-react';
+import { DevicePresenceList } from '@/components/DevicePresenceList';
+import { ClipboardRoom, ClipItem, DevicePresence } from '@/lib/types';
+import { getClientDeviceInfo, getBatteryStatus } from '@/lib/device';
+import { ArrowLeft, RefreshCw, Smartphone, Zap } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ClipRoomPage() {
@@ -21,19 +23,44 @@ export default function ClipRoomPage() {
   const [roomData, setRoomData] = useState<ClipboardRoom | null>(null);
   const [mainContent, setMainContent] = useState('');
   const [snippets, setSnippets] = useState<ClipItem[]>([]);
+  const [devices, setDevices] = useState<DevicePresence[]>([]);
+  const [clientDevice, setClientDevice] = useState<Omit<DevicePresence, 'lastSeen'> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSseActive, setIsSseActive] = useState(false);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [pageUrl, setPageUrl] = useState('');
 
+  const [remoteTypingUser, setRemoteTypingUser] = useState<{ name: string; color: string } | null>(null);
+
+  const clientDeviceRef = useRef<Omit<DevicePresence, 'lastSeen'> | null>(null);
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastLivePushTimeRef = useRef<number>(0);
+  const livePushTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingLiveValRef = useRef<string | null>(null);
+  const remoteTypingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Set Page URL on mount for QR code
+  // Initialize client device and URL
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setPageUrl(window.location.href);
+      const devInfo = getClientDeviceInfo();
+      clientDeviceRef.current = devInfo;
+      setClientDevice(devInfo);
+
+      // Async fetch battery if supported
+      getBatteryStatus().then((battery) => {
+        if (battery) {
+          setClientDevice((prev) => {
+            const next = prev ? { ...prev, battery } : prev;
+            clientDeviceRef.current = next;
+            return next;
+          });
+        }
+      });
 
       // Save to recent rooms list in localStorage
       try {
@@ -59,6 +86,50 @@ export default function ClipRoomPage() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Device Presence Heartbeat
+  const sendPresenceHeartbeat = useCallback(async () => {
+    if (!clientDevice) return;
+    try {
+      const res = await fetch(`/api/clip/${slug}/presence`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ device: clientDevice }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.devices) {
+        setDevices(data.data.devices);
+      }
+    } catch (e) {
+      // silent fail on network hiccups
+    }
+  }, [clientDevice, slug]);
+
+  // Periodic heartbeat every 3.5s + cleanup on unmount/unload
+  useEffect(() => {
+    if (!clientDevice) return;
+
+    sendPresenceHeartbeat();
+    const interval = setInterval(sendPresenceHeartbeat, 3500);
+
+    const handleBeforeUnload = () => {
+      if (clientDevice) {
+        navigator.sendBeacon?.(`/api/clip/${slug}/presence?deviceId=${clientDevice.deviceId}`);
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (clientDevice) {
+        fetch(`/api/clip/${slug}/presence?deviceId=${clientDevice.deviceId}`, {
+          method: 'DELETE',
+          keepalive: true,
+        }).catch(() => {});
+      }
+    };
+  }, [clientDevice, sendPresenceHeartbeat, slug]);
+
   // Fetch current data from server
   const fetchRoomData = useCallback(
     async (isSilent = false) => {
@@ -74,6 +145,9 @@ export default function ClipRoomPage() {
             setMainContent(serverRoom.mainContent || '');
           }
           setSnippets(serverRoom.snippets || []);
+          if (serverRoom.activeDevices) {
+            setDevices(serverRoom.activeDevices);
+          }
         }
       } catch (e) {
         console.error('Failed syncing clipboard data:', e);
@@ -84,15 +158,113 @@ export default function ClipRoomPage() {
     [slug]
   );
 
-  // Initial fetch + Auto polling every 2.5s
+  // Initial fetch + SSE Live Stream (<50ms push) + 10s relaxed backup poll
   useEffect(() => {
     fetchRoomData();
-    const interval = setInterval(() => {
-      fetchRoomData(true);
-    }, 2500);
 
-    return () => clearInterval(interval);
-  }, [fetchRoomData]);
+    // 1. Connect real-time Server-Sent Events (SSE) stream
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource(`/api/clip/${slug}/stream`);
+
+      es.addEventListener('connected', (e: MessageEvent) => {
+        setIsSseActive(true);
+        try {
+          const payload = JSON.parse(e.data);
+          if (payload.room) {
+            setRoomData(payload.room);
+            if (!isTypingRef.current) {
+              setMainContent(payload.room.mainContent || '');
+            }
+            setSnippets(payload.room.snippets || []);
+          }
+        } catch {}
+      });
+
+      es.addEventListener('live_typing', (e: MessageEvent) => {
+        try {
+          const payload = JSON.parse(e.data);
+          const currentDev = clientDeviceRef.current || (typeof window !== 'undefined' ? getClientDeviceInfo() : null);
+          const myId = currentDev?.deviceId;
+
+          // If update came from local device/tab, ignore
+          if (payload.senderDeviceId && myId && payload.senderDeviceId === myId) {
+            return;
+          }
+
+          if (typeof payload.mainContent === 'string') {
+            // Reflect remote keystroke immediately
+            if (!isTypingRef.current) {
+              setMainContent(payload.mainContent);
+            }
+          }
+
+          const remoteName = payload.senderDeviceName || 'Connected Peer';
+          const remoteColor = payload.senderColor || '#10b981';
+          setRemoteTypingUser({ name: remoteName, color: remoteColor });
+
+          if (remoteTypingTimerRef.current) clearTimeout(remoteTypingTimerRef.current);
+          remoteTypingTimerRef.current = setTimeout(() => {
+            setRemoteTypingUser(null);
+          }, 2000);
+        } catch (err) {
+          console.error('SSE live_typing parse error:', err);
+        }
+      });
+
+      es.addEventListener('update', (e: MessageEvent) => {
+        try {
+          const updated: ClipboardRoom = JSON.parse(e.data);
+          setRoomData(updated);
+
+          // Update editor content instantly if local user is not actively typing
+          if (!isTypingRef.current) {
+            setMainContent(updated.mainContent || '');
+          }
+          setSnippets(updated.snippets || []);
+        } catch (err) {
+          console.error('SSE update parse error:', err);
+        }
+      });
+
+      es.onerror = () => {
+        setIsSseActive(false);
+      };
+    } catch (e) {
+      console.error('SSE init error:', e);
+    }
+
+    // 2. Relaxed backup poll every 10s (reduced requests by 80%)
+    const backupInterval = setInterval(() => {
+      fetchRoomData(true);
+    }, 10000);
+
+    return () => {
+      clearInterval(backupInterval);
+      if (es) es.close();
+    };
+  }, [fetchRoomData, slug]);
+
+  // Fast sub-50ms live typing push
+  const pushLiveTyping = async (text: string) => {
+    try {
+      const dev = clientDeviceRef.current || (typeof window !== 'undefined' ? getClientDeviceInfo() : null);
+      const devId = dev?.deviceId || (typeof window !== 'undefined' ? sessionStorage.getItem('the_drop_device_id') : 'peer');
+      const devName = dev?.deviceName || 'Peer Device';
+      const devColor = dev?.color || '#10b981';
+
+      await fetch(`/api/clip/${slug}/live`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mainContent: text,
+          senderDeviceId: devId,
+          senderDeviceName: devName,
+          senderColor: devColor,
+        }),
+      });
+    } catch {}
+  };
 
   // Save updated room state to server
   const persistRoomState = async (newMainContent: string, newSnippets: ClipItem[]) => {
@@ -114,19 +286,41 @@ export default function ClipRoomPage() {
       console.error('Error saving clip room:', e);
     } finally {
       setIsSaving(false);
-      isTypingRef.current = false;
     }
   };
 
-  // Editor content change handler with 400ms debounce
+  // Ultra-responsive typing sync: 50ms leading/trailing push & debounced 600ms DB persist
   const handleMainContentChange = (val: string) => {
     setMainContent(val);
     isTypingRef.current = true;
+    pendingLiveValRef.current = val;
 
+    // Reset local typing lock 350ms after user pauses
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      isTypingRef.current = false;
+    }, 350);
+
+    // 1. Sub-50ms instant live broadcast to all connected devices
+    const now = Date.now();
+    const timeSinceLast = now - lastLivePushTimeRef.current;
+
+    if (timeSinceLast >= 50) {
+      lastLivePushTimeRef.current = now;
+      pushLiveTyping(val);
+    } else {
+      if (livePushTimerRef.current) clearTimeout(livePushTimerRef.current);
+      livePushTimerRef.current = setTimeout(() => {
+        lastLivePushTimeRef.current = Date.now();
+        pushLiveTyping(pendingLiveValRef.current ?? val);
+      }, 50 - timeSinceLast);
+    }
+
+    // 2. Background persistent DB save (debounced 600ms)
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       persistRoomState(val, snippets);
-    }, 400);
+    }, 600);
   };
 
   // Add new snippet card
@@ -154,13 +348,13 @@ export default function ClipRoomPage() {
   return (
     <div className="min-h-screen flex flex-col justify-between bg-zinc-950 text-zinc-100 font-sans relative">
       {/* Background Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-indigo-600/10 blur-[130px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-[#ff5a1f]/10 blur-[140px] rounded-full pointer-events-none -z-10" />
 
       <Navbar currentRoom={slug} onOpenQR={() => setIsQRModalOpen(true)} isSyncing={isSyncing} />
 
       <main className="flex-1 max-w-5xl sm:max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
         {/* Navigation Breadcrumb & Room Title Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 shadow-sm backdrop-blur-md">
           <div className="flex items-center gap-3">
             <Link
               href="/"
@@ -172,7 +366,32 @@ export default function ClipRoomPage() {
             <div>
               <h1 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
                 <span className="text-zinc-400 font-medium">Room:</span>
-                <span className="font-mono text-indigo-400">{slug}</span>
+                <span className="font-mono text-[#ff5a1f]">{slug}</span>
+                {isSseActive && (
+                  <span
+                    className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400 font-semibold"
+                    title="Server-Sent Events active: sub-50ms live push"
+                  >
+                    <Zap className="w-2.5 h-2.5 fill-current" />
+                    <span>Live 50ms Push</span>
+                  </span>
+                )}
+                {remoteTypingUser && (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border shadow-sm animate-pulse"
+                    style={{
+                      backgroundColor: `${remoteTypingUser.color}25`,
+                      borderColor: `${remoteTypingUser.color}80`,
+                      color: remoteTypingUser.color,
+                    }}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: remoteTypingUser.color }}
+                    />
+                    <span>{remoteTypingUser.name} typing live...</span>
+                  </span>
+                )}
               </h1>
               <p className="text-xs text-zinc-500">
                 Share this room URL or scan QR code to access clipboard live across devices.
@@ -186,7 +405,7 @@ export default function ClipRoomPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 hover:bg-zinc-900 text-zinc-300 text-xs font-mono transition-colors"
               title="Sync manually"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${isSyncing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-[#ff5a1f] ${isSyncing ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
             </button>
 
@@ -200,7 +419,15 @@ export default function ClipRoomPage() {
           </div>
         </div>
 
-        {/* Main Editor Component */}
+        {/* Live Device Presence Indicator Radar */}
+        <DevicePresenceList
+          devices={devices}
+          currentDeviceId={clientDevice?.deviceId}
+          onOpenQR={() => setIsQRModalOpen(true)}
+          roomSlug={slug}
+        />
+
+        {/* Main Editor Component with Code & .env Auto-detection & Syntax Highlighting */}
         <ClipEditor
           slug={slug}
           initialContent={mainContent}
@@ -209,13 +436,27 @@ export default function ClipRoomPage() {
           lastUpdated={roomData?.updatedAt}
           onShowToast={addToast}
           onOpenQR={() => setIsQRModalOpen(true)}
+          remoteTypingUser={remoteTypingUser}
         />
 
-        <div className="w-full max-w-5xl">
-          <FileUpload slug={slug} onUploaded={() => fetchRoomData()} />
+        <div className="w-full max-w-5xl flex flex-col gap-3">
+          <FileUpload
+            slug={slug}
+            onUploaded={() => fetchRoomData()}
+            onShowToast={addToast}
+          />
 
-          {/* File listing */}
-          <FileList files={roomData?.files} slug={slug} onDeleted={() => fetchRoomData()} />
+          {/* File listing with in-browser OCR */}
+          <FileList
+            files={roomData?.files}
+            slug={slug}
+            onDeleted={() => fetchRoomData()}
+            onInsertIntoClipboard={(text) => {
+              const nextContent = mainContent ? `${mainContent}\n\n${text}` : text;
+              handleMainContentChange(nextContent);
+            }}
+            onShowToast={addToast}
+          />
         </div>
 
         {/* Additional Snippets List Component */}
@@ -230,7 +471,7 @@ export default function ClipRoomPage() {
       {/* Sleek Dark Footer */}
       <footer className="border-t border-zinc-900 bg-zinc-950 py-5">
         <div className="max-w-5xl mx-auto px-4 text-center text-xs text-zinc-500 font-mono">
-          Connected to Room <code className="text-indigo-400">{slug}</code> • Real-time Cross-Device Sync
+          Connected to Room <code className="text-[#ff5a1f]">{slug}</code> • Live Peer Radar & Real-time Sync
         </div>
       </footer>
 
@@ -246,4 +487,3 @@ export default function ClipRoomPage() {
     </div>
   );
 }
-
