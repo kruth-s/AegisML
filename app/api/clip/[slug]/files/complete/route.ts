@@ -16,15 +16,30 @@ export async function POST(
     // Expecting cloudinary response fields
     const { public_id, secure_url, url, bytes, original_filename, resource_type, format } = body;
 
+    const rawName = original_filename || public_id || 'dropped_file';
+    const filename =
+      format && !rawName.toLowerCase().endsWith(`.${format.toLowerCase()}`)
+        ? `${rawName}.${format}`
+        : rawName;
+
+    const mimeType =
+      resource_type === 'image'
+        ? `image/${format || 'png'}`
+        : resource_type === 'video'
+        ? `video/${format || 'mp4'}`
+        : format
+        ? `${resource_type}/${format}`
+        : resource_type || undefined;
+
     const id = Math.random().toString(36).substring(2, 9);
     const fileItem: FileItem = {
       id,
       publicId: public_id,
-      filename: original_filename || public_id,
+      filename,
       url: secure_url || url || '',
       secureUrl: secure_url,
       size: bytes || 0,
-      contentType: resource_type || format || undefined,
+      contentType: mimeType,
       createdAt: new Date().toISOString(),
     };
 

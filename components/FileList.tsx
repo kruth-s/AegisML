@@ -21,14 +21,27 @@ function formatBytes(bytes: number) {
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
 }
 
-function isImageFile(filename: string, contentType?: string): boolean {
-  if (contentType?.startsWith('image/')) return true;
-  return /\.(jpe?g|png|webp|gif|svg|bmp|tiff)$/i.test(filename);
+function isImageFile(filename?: string, contentType?: string, url?: string): boolean {
+  const cType = (contentType || '').toLowerCase();
+  const name = (filename || '').toLowerCase();
+  const fileUrl = (url || '').toLowerCase();
+
+  if (cType.includes('image') || /^(png|jpe?g|webp|gif|svg|bmp|tiff|heic)$/i.test(cType)) return true;
+  if (/\.(jpe?g|png|webp|gif|svg|bmp|tiff|heic)$/i.test(name)) return true;
+  if (name.includes('screenshot') || name.includes('snap') || name.includes('photo') || name.startsWith('img_')) return true;
+  if (fileUrl.startsWith('data:image/') || fileUrl.includes('/image/upload/') || /\.(jpe?g|png|webp|gif|svg|bmp|tiff)(\?.*)?$/i.test(fileUrl)) return true;
+  return false;
 }
 
-function isAudioFile(filename: string, contentType?: string): boolean {
-  if (contentType?.startsWith('audio/') || contentType?.startsWith('video/webm')) return true;
-  return /\.(webm|wav|mp3|m4a|ogg|aac|flac)$/i.test(filename) || filename.toLowerCase().includes('voice_note');
+function isAudioFile(filename?: string, contentType?: string, url?: string): boolean {
+  const cType = (contentType || '').toLowerCase();
+  const name = (filename || '').toLowerCase();
+  const fileUrl = (url || '').toLowerCase();
+
+  if (cType.includes('audio') || cType.includes('opus') || /^(webm|mp3|wav|ogg|m4a|aac|flac)$/i.test(cType)) return true;
+  if (/\.(webm|wav|mp3|m4a|ogg|aac|flac)$/i.test(name) || name.includes('voice_note') || name.includes('audio')) return true;
+  if (fileUrl.startsWith('data:audio/') || (fileUrl.includes('/video/upload/') && name.includes('voice'))) return true;
+  return false;
 }
 
 export const FileList: React.FC<FileListProps> = ({
@@ -87,8 +100,8 @@ export const FileList: React.FC<FileListProps> = ({
 
       <div className="grid grid-cols-1 gap-2.5">
         {files.map((f) => {
-          const isAudio = isAudioFile(f.filename, f.contentType);
-          const isImg = isImageFile(f.filename, f.contentType);
+          const isAudio = isAudioFile(f.filename, f.contentType, f.url);
+          const isImg = isImageFile(f.filename, f.contentType, f.url);
 
           if (isAudio) {
             return (
