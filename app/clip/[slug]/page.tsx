@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { ClipEditor } from '@/components/ClipEditor';
 import { SnippetsList } from '@/components/SnippetsList';
+import { MultiClipStack } from '@/components/MultiClipStack';
 import { QRCodeModal } from '@/components/QRCodeModal';
 import { FileUpload } from '@/components/FileUpload';
 import { FileList } from '@/components/FileList';
@@ -302,6 +303,19 @@ export default function ClipRoomPage() {
         }
       });
 
+      // Self-Destruct / Ephemeral Burn SSE Handler
+      es.addEventListener('content_burned', () => {
+        try {
+          setMainContent('');
+          setRoomData((prev) =>
+            prev ? { ...prev, mainContent: '', isBurned: true, burnMode: null } : prev
+          );
+          addToast('🔥 Content securely burned and purged from room!', 'info');
+        } catch (err) {
+          console.error('SSE content_burned error:', err);
+        }
+      });
+
       es.onerror = () => {
         setIsSseActive(false);
       };
@@ -420,6 +434,64 @@ export default function ClipRoomPage() {
     addToast('Snippet removed', 'info');
   };
 
+  // Set Burn-on-Copy or Countdown Timer
+  const handleSetBurnMode = async (mode: 'burn_on_copy' | 'timer' | null, durationSeconds?: number) => {
+    try {
+      const res = await fetch(`/api/clip/${slug}/burn`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'set_mode',
+          burnMode: mode,
+          durationSeconds,
+          deviceId: clientDevice?.deviceId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setRoomData(data.data);
+      }
+    } catch (e) {
+      console.error('Failed to set burn mode:', e);
+    }
+  };
+
+  // Trigger Burn / Self-Destruct
+  const handleTriggerBurn = async () => {
+    try {
+      setMainContent('');
+      setRoomData((prev) =>
+        prev ? { ...prev, mainContent: '', isBurned: true, burnMode: null } : prev
+      );
+      await fetch(`/api/clip/${slug}/burn`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'burn',
+          deviceId: clientDevice?.deviceId,
+        }),
+      });
+    } catch (e) {
+      console.error('Failed to trigger burn:', e);
+    }
+  };
+
+  // Auto-push previous clip into Multi-Clip History Stack
+  const handlePushToStack = (contentToPush: string) => {
+    if (!contentToPush.trim()) return;
+    const newItem: ClipItem = {
+      id: Math.random().toString(36).substring(2, 9),
+      content: contentToPush,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      sourceDeviceId: clientDevice?.deviceId,
+      sourceDeviceName: clientDevice?.deviceName,
+    };
+    const updated = [newItem, ...snippets.filter((s) => s.content.trim() !== contentToPush.trim())].slice(0, 20);
+    setSnippets(updated);
+    persistRoomState(mainContent, updated);
+  };
+
   return (
     <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden flex flex-col justify-between bg-zinc-950 text-zinc-100 font-sans relative">
       {/* Background Glow */}
@@ -498,7 +570,7 @@ export default function ClipRoomPage() {
           onOpenP2P={() => setIsBeamModalOpen(true)}
         />
 
-        {/* Main Editor Component with Code & .env Auto-detection & Syntax Highlighting */}
+        {/* Main Editor Component with Code & .env Auto-detection & Syntax Highlighting & Ephemeral Burn */}
         <ClipEditor
           slug={slug}
           initialContent={mainContent}
@@ -508,6 +580,27 @@ export default function ClipRoomPage() {
           onShowToast={addToast}
           onOpenQR={() => setIsQRModalOpen(true)}
           remoteTypingUser={remoteTypingUser}
+          burnMode={roomData?.burnMode}
+          burnExpiresAt={roomData?.burnExpiresAt}
+          burnAuthorDeviceId={roomData?.burnAuthorDeviceId}
+          currentDeviceId={clientDevice?.deviceId}
+          isBurned={roomData?.isBurned}
+          onSetBurnMode={handleSetBurnMode}
+          onTriggerBurn={handleTriggerBurn}
+          onPushToStack={handlePushToStack}
+        />
+
+        {/* Multi-Clip History Stack (Smart Categories, 1-Tap Copy, Merged Copy All) */}
+        <MultiClipStack
+          stack={snippets}
+          onPromoteToEditor={(text) => handleMainContentChange(text)}
+          onDeleteClip={handleDeleteSnippet}
+          onClearStack={() => {
+            setSnippets([]);
+            persistRoomState(mainContent, []);
+            addToast('Stack cleared', 'info');
+          }}
+          onShowToast={addToast}
         />
 
         <div className="w-full max-w-5xl flex flex-col gap-3">

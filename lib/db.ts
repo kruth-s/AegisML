@@ -19,6 +19,14 @@ export async function getClipboard(slug: string): Promise<ClipboardRoom | null> 
     try {
       const raw = await redis.get<ClipboardRoom>(`clip:${normalizedSlug}`);
       if (raw) {
+        // Automatic server-side timer expiration check
+        if (raw.burnMode === 'timer' && raw.burnExpiresAt && Date.now() >= raw.burnExpiresAt && raw.mainContent) {
+          raw.mainContent = '';
+          raw.isBurned = true;
+          raw.burnMode = null;
+          raw.burnExpiresAt = null;
+          redis.set(`clip:${normalizedSlug}`, raw, { ex: 60 * 60 * 24 * 30 }).catch(() => {});
+        }
         memoryStore.set(normalizedSlug, raw);
         return raw;
       }
@@ -29,7 +37,14 @@ export async function getClipboard(slug: string): Promise<ClipboardRoom | null> 
 
   // 2. Memory cache fallback
   if (memoryStore.has(normalizedSlug)) {
-    return memoryStore.get(normalizedSlug)!;
+    const raw = memoryStore.get(normalizedSlug)!;
+    if (raw.burnMode === 'timer' && raw.burnExpiresAt && Date.now() >= raw.burnExpiresAt && raw.mainContent) {
+      raw.mainContent = '';
+      raw.isBurned = true;
+      raw.burnMode = null;
+      raw.burnExpiresAt = null;
+    }
+    return raw;
   }
 
   return null;

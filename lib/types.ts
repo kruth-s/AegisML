@@ -5,6 +5,10 @@ export interface ClipItem {
   createdAt: string;
   updatedAt: string;
   language?: string;
+  category?: 'code' | 'url' | 'secret' | 'plain';
+  sourceDeviceId?: string;
+  sourceDeviceName?: string;
+  pinned?: boolean;
 }
 
 export interface FileItem {
@@ -56,6 +60,11 @@ export interface ClipboardRoom {
   updatedAt: string;
   expiresAt?: string | null;
   views?: number;
+  // Ephemeral Self-Destruct / Burn Controls
+  burnMode?: 'burn_on_copy' | 'timer' | null;
+  burnExpiresAt?: number | null;
+  burnAuthorDeviceId?: string;
+  isBurned?: boolean;
 }
 
 export interface APIResponse<T> {

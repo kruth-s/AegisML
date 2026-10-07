@@ -22,7 +22,7 @@ export async function POST(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const relayItem = createRelayTransfer({
+    const relayItem = await createRelayTransfer({
       slug,
       filename: file.name,
       size: file.size,
@@ -75,7 +75,7 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Transfer code is required' }, { status: 400 });
     }
 
-    const item = getRelayTransfer(code);
+    const item = await getRelayTransfer(code);
     if (!item) {
       return NextResponse.json(
         { success: false, error: 'Invalid or expired 6-digit transfer code' },
@@ -98,11 +98,31 @@ export async function GET(
       });
     }
 
-    // Stream download file binary
+    // Stream download file binary (from local buffer, Redis base64, or Cloudinary URL)
     item.downloadCount += 1;
-    const uint8 = new Uint8Array(item.buffer);
+    let uint8: Uint8Array;
 
-    return new Response(uint8, {
+    if (item.buffer) {
+      uint8 = new Uint8Array(item.buffer);
+    } else if (item.base64Data) {
+      uint8 = new Uint8Array(Buffer.from(item.base64Data, 'base64'));
+    } else if (item.url) {
+      try {
+        const upstream = await fetch(item.url);
+        if (upstream.ok) {
+          const ab = await upstream.arrayBuffer();
+          uint8 = new Uint8Array(ab);
+        } else {
+          return NextResponse.redirect(item.url);
+        }
+      } catch (err) {
+        return NextResponse.redirect(item.url);
+      }
+    } else {
+      return NextResponse.json({ success: false, error: 'File data unavailable' }, { status: 404 });
+    }
+
+    return new Response(uint8 as unknown as BodyInit, {
       status: 200,
       headers: {
         'Content-Type': item.contentType || 'application/octet-stream',
