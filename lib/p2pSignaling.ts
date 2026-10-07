@@ -13,7 +13,7 @@ export interface P2PSignalMessage {
   fromDeviceName: string;
   fromDeviceType?: string;
   toDeviceId: string;
-  signalType: 'offer' | 'answer' | 'ice' | 'reject' | 'cancel';
+  signalType: 'offer' | 'answer' | 'ice' | 'reject' | 'cancel' | 'relay_ready';
   data: any; // SDP offer/answer, ICE candidate, or file metadata
   timestamp: number;
 }
@@ -89,4 +89,24 @@ export async function getPendingSignals(deviceId: string): Promise<P2PSignalMess
   }
 
   return results.filter((s) => now - s.timestamp < SIGNAL_TTL_MS);
+}
+
+export async function broadcastSignal(
+  slug: string,
+  signal: {
+    fromDeviceId: string;
+    fromDeviceName: string;
+    toDeviceId?: string;
+    signalType: P2PSignalMessage['signalType'];
+    data: any;
+  }
+) {
+  return sendP2PSignal({
+    slug,
+    fromDeviceId: signal.fromDeviceId,
+    fromDeviceName: signal.fromDeviceName,
+    toDeviceId: signal.toDeviceId || 'all',
+    signalType: signal.signalType,
+    data: signal.data,
+  });
 }

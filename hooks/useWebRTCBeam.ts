@@ -33,12 +33,23 @@ export function useWebRTCBeam({ slug, clientDevice, onShowToast }: UseWebRTCBeam
     offerSdp: RTCSessionDescriptionInit;
   } | null>(null);
 
+  // SendAnywhere-style 6-Digit Key & Relay states
+  const [relayActiveCode, setRelayActiveCode] = useState<string | null>(null);
+  const [isRelayUploading, setIsRelayUploading] = useState(false);
+  const [incomingRelay, setIncomingRelay] = useState<{
+    code: string;
+    filename: string;
+    size: number;
+    senderDeviceName: string;
+  } | null>(null);
+
   // Active Peer Connection and Data Channel refs
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const activePeerIdRef = useRef<string | null>(null);
   const receivedChunksRef = useRef<ArrayBuffer[]>([]);
   const currentReceivingMetaRef = useRef<BeamFileMetadata | null>(null);
+  const currentSendingFileRef = useRef<File | null>(null);
 
   // Send a signal via API
   const sendSignal = useCallback(
@@ -137,6 +148,15 @@ export function useWebRTCBeam({ slug, clientDevice, onShowToast }: UseWebRTCBeam
         setIncomingOffer(null);
         setReceiveProgress(null);
         onShowToast?.('Transfer cancelled by sender', 'info');
+      } else if (signalType === 'relay_ready') {
+        const { code, filename, size, senderDeviceName } = data;
+        onShowToast?.(`🔢 ${senderDeviceName} shared "${filename}" (Code: ${code})`, 'info');
+        setIncomingRelay({
+          code,
+          filename,
+          size,
+          senderDeviceName,
+        });
       }
     },
     [clientDevice, cleanupConnection, onShowToast]
@@ -167,6 +187,7 @@ export function useWebRTCBeam({ slug, clientDevice, onShowToast }: UseWebRTCBeam
       if (!clientDevice) return;
       cleanupConnection();
 
+      currentSendingFileRef.current = file;
       setTargetDevice(target);
       setIsModalOpen(true);
       setSendProgress({
@@ -406,6 +427,83 @@ export function useWebRTCBeam({ slug, clientDevice, onShowToast }: UseWebRTCBeam
     setIsModalOpen(false);
   }, [cleanupConnection, sendSignal]);
 
+  // Send file via SendAnywhere-style 6-Digit Key Relay
+  const startRelaySend = useCallback(
+    async (file: File) => {
+      if (!clientDevice) return null;
+      setIsRelayUploading(true);
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('senderDeviceId', clientDevice.deviceId);
+        fd.append('senderDeviceName', clientDevice.deviceName);
+
+        const res = await fetch(`/api/clip/${slug}/relay`, {
+          method: 'POST',
+          body: fd,
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || 'Failed to start relay');
+
+        setRelayActiveCode(json.data.code);
+        onShowToast?.(`⚡ 6-Digit Key generated: ${json.data.code}`, 'success');
+        return json.data.code as string;
+      } catch (e: any) {
+        onShowToast?.(e.message || 'Relay upload error', 'error');
+        return null;
+      } finally {
+        setIsRelayUploading(false);
+      }
+    },
+    [clientDevice, slug, onShowToast]
+  );
+
+  // Download file by 6-Digit Key
+  const receiveByRelayCode = useCallback(
+    async (code: string) => {
+      const clean = code.replace(/\s+/g, '');
+      if (!clean) return false;
+      try {
+        const res = await fetch(`/api/clip/${slug}/relay?code=${clean}`);
+        if (!res.ok) {
+          const json = await res.json().catch(() => null);
+          throw new Error(json?.error || 'Invalid or expired 6-digit key');
+        }
+
+        let filename = 'downloaded_file';
+        const disposition = res.headers.get('content-disposition');
+        if (disposition && disposition.includes('filename=')) {
+          const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
+          if (match && match[1]) filename = decodeURIComponent(match[1]);
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        onShowToast?.(`⚡ Downloaded "${filename}" via 6-digit key!`, 'success');
+        return true;
+      } catch (e: any) {
+        onShowToast?.(e.message || 'Failed to download file', 'error');
+        return false;
+      }
+    },
+    [slug, onShowToast]
+  );
+
+  // Instant switch from WebRTC to 6-Digit Relay if peer is slow to accept or blocked by NAT
+  const switchToRelay = useCallback(async () => {
+    if (!currentSendingFileRef.current) return null;
+    cleanupConnection();
+    setSendProgress(null);
+    return startRelaySend(currentSendingFileRef.current);
+  }, [cleanupConnection, startRelaySend]);
+
   return {
     isModalOpen,
     setIsModalOpen,
@@ -414,10 +512,16 @@ export function useWebRTCBeam({ slug, clientDevice, onShowToast }: UseWebRTCBeam
     sendProgress,
     receiveProgress,
     incomingOffer,
+    incomingRelay,
+    relayActiveCode,
+    isRelayUploading,
     startSendFile,
     acceptIncomingBeam,
     rejectIncomingBeam,
     cancelTransfer,
     handleSignal,
+    startRelaySend,
+    receiveByRelayCode,
+    switchToRelay,
   };
 }

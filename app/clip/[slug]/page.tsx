@@ -57,7 +57,7 @@ export default function ClipRoomPage() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Direct WebRTC P2P Beam Hook (Zero-Server Browser AirDrop)
+  // Direct WebRTC P2P Beam Hook (Zero-Server Browser AirDrop) & 6-Digit SendAnywhere Relay
   const fullClientDevice = clientDevice ? { ...clientDevice, lastSeen: Date.now() } : null;
   const {
     isModalOpen: isBeamModalOpen,
@@ -67,11 +67,17 @@ export default function ClipRoomPage() {
     sendProgress: beamSendProgress,
     receiveProgress: beamReceiveProgress,
     incomingOffer: beamIncomingOffer,
+    incomingRelay: beamIncomingRelay,
+    relayActiveCode: beamRelayActiveCode,
+    isRelayUploading: beamIsRelayUploading,
     startSendFile: startBeamSendFile,
     acceptIncomingBeam,
     rejectIncomingBeam,
     cancelTransfer: cancelBeamTransfer,
     handleSignal: handleP2PSignal,
+    startRelaySend: startBeamRelaySend,
+    receiveByRelayCode: receiveBeamByRelayCode,
+    switchToRelay: switchBeamToRelay,
   } = useWebRTCBeam({
     slug,
     clientDevice: fullClientDevice,
@@ -556,7 +562,7 @@ export default function ClipRoomPage() {
         roomSlug={slug}
       />
 
-      {/* P2P Zero-Server WebRTC Beam Modal */}
+      {/* P2P Zero-Server WebRTC Beam & SendAnywhere 6-Digit Relay Modal */}
       <P2PBeamModal
         isOpen={isBeamModalOpen}
         onClose={() => setIsBeamModalOpen(false)}
@@ -571,6 +577,12 @@ export default function ClipRoomPage() {
         onAcceptBeam={acceptIncomingBeam}
         onRejectBeam={rejectIncomingBeam}
         onCancelBeam={cancelBeamTransfer}
+        relayActiveCode={beamRelayActiveCode}
+        isRelayUploading={beamIsRelayUploading}
+        incomingRelay={beamIncomingRelay}
+        onStartRelaySend={startBeamRelaySend}
+        onReceiveByRelayCode={receiveBeamByRelayCode}
+        onSwitchToRelay={switchBeamToRelay}
       />
 
       <Toast toasts={toasts} onClose={removeToast} />
