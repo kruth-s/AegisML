@@ -17,6 +17,7 @@ import {
   MapPin,
   ShieldCheck,
   Battery,
+  Zap,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -24,6 +25,8 @@ interface DevicePresenceListProps {
   devices: DevicePresence[];
   currentDeviceId?: string;
   onOpenQR?: () => void;
+  onBeamDevice?: (device: DevicePresence) => void;
+  onOpenP2P?: () => void;
   roomSlug: string;
 }
 
@@ -31,6 +34,8 @@ export const DevicePresenceList: React.FC<DevicePresenceListProps> = ({
   devices,
   currentDeviceId,
   onOpenQR,
+  onBeamDevice,
+  onOpenP2P,
   roomSlug,
 }) => {
   const [copiedLink, setCopiedLink] = useState(false);
@@ -95,6 +100,17 @@ export const DevicePresenceList: React.FC<DevicePresenceListProps> = ({
 
         {/* Right: Quick Connect Other Device */}
         <div className="flex items-center gap-2">
+          {onOpenP2P && (
+            <button
+              onClick={onOpenP2P}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-400 text-xs font-semibold transition-all hover:scale-105 shadow-sm"
+              title="Beam files directly peer-to-peer (Zero server limits, 50-100 MB/s)"
+            >
+              <Zap className="w-3.5 h-3.5 fill-current text-amber-400" />
+              <span>P2P Beam</span>
+            </button>
+          )}
+
           <button
             onClick={handleCopyLink}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 text-xs font-medium transition-colors"
@@ -247,12 +263,25 @@ export const DevicePresenceList: React.FC<DevicePresenceListProps> = ({
               )}
             </div>
 
-            <button
-              onClick={() => setSelectedDevice(null)}
-              className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors"
-            >
-              Close
-            </button>
+            <div className="flex items-center gap-2">
+              {selectedDevice.deviceId !== currentDeviceId && onBeamDevice && (
+                <button
+                  onClick={() => onBeamDevice(selectedDevice)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#ff5a1f] hover:bg-[#ff6d36] text-white text-xs font-bold transition-all shadow-md shadow-[#ff5a1f]/20 hover:scale-105"
+                  title="Beam files directly to this device over local Wi-Fi"
+                >
+                  <Zap className="w-3.5 h-3.5 fill-current" />
+                  <span>Beam File</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => setSelectedDevice(null)}
+                className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors p-1"
+              >
+                Close
+              </button>
+            </div>
           </div>
 
           {/* Telemetry Grid */}

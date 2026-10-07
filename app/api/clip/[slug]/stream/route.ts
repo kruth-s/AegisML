@@ -40,7 +40,7 @@ export async function GET(
       // 2. Subscribe to room changes (<50ms push)
       const unsubscribe = subscribeToRoom(normalizedSlug, (payload) => {
         try {
-          const eventType = payload?.type === 'live_typing' ? 'live_typing' : 'update';
+          const eventType = payload?.type ? payload.type : 'update';
           controller.enqueue(
             encoder.encode(`event: ${eventType}\ndata: ${JSON.stringify(payload)}\n\n`)
           );

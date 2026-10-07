@@ -10,6 +10,8 @@ import { FileUpload } from '@/components/FileUpload';
 import { FileList } from '@/components/FileList';
 import { Toast, ToastMessage } from '@/components/Toast';
 import { DevicePresenceList } from '@/components/DevicePresenceList';
+import { P2PBeamModal } from '@/components/P2PBeamModal';
+import { useWebRTCBeam } from '@/hooks/useWebRTCBeam';
 import { ClipboardRoom, ClipItem, DevicePresence } from '@/lib/types';
 import { getClientDeviceInfo, getBatteryStatus } from '@/lib/device';
 import { ArrowLeft, RefreshCw, Smartphone, Zap } from 'lucide-react';
@@ -43,6 +45,44 @@ export default function ClipRoomPage() {
   const pendingLiveValRef = useRef<string | null>(null);
   const remoteTypingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const addToast = useCallback((text: string, type: 'success' | 'error' | 'info' = 'info') => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, text, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // Direct WebRTC P2P Beam Hook (Zero-Server Browser AirDrop)
+  const fullClientDevice = clientDevice ? { ...clientDevice, lastSeen: Date.now() } : null;
+  const {
+    isModalOpen: isBeamModalOpen,
+    setIsModalOpen: setIsBeamModalOpen,
+    targetDevice: beamTargetDevice,
+    setTargetDevice: setBeamTargetDevice,
+    sendProgress: beamSendProgress,
+    receiveProgress: beamReceiveProgress,
+    incomingOffer: beamIncomingOffer,
+    startSendFile: startBeamSendFile,
+    acceptIncomingBeam,
+    rejectIncomingBeam,
+    cancelTransfer: cancelBeamTransfer,
+    handleSignal: handleP2PSignal,
+  } = useWebRTCBeam({
+    slug,
+    clientDevice: fullClientDevice,
+    onShowToast: addToast,
+  });
+
+  const handleP2PSignalRef = useRef(handleP2PSignal);
+  useEffect(() => {
+    handleP2PSignalRef.current = handleP2PSignal;
+  }, [handleP2PSignal]);
+
   // Initialize client device and URL
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -73,18 +113,6 @@ export default function ClipRoomPage() {
       } catch (e) {}
     }
   }, [slug]);
-
-  const addToast = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, text, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
-  };
-
-  const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
 
   // Device Presence Heartbeat
   const sendPresenceHeartbeat = useCallback(async () => {
@@ -255,6 +283,16 @@ export default function ClipRoomPage() {
           setSnippets(updated.snippets || []);
         } catch (err) {
           console.error('SSE update parse error:', err);
+        }
+      });
+
+      // P2P WebRTC Direct Beam Signal Handler (<10ms low latency)
+      es.addEventListener('p2p_signal', (e: MessageEvent) => {
+        try {
+          const sig = JSON.parse(e.data);
+          handleP2PSignalRef.current(sig);
+        } catch (err) {
+          console.error('SSE p2p_signal parse error:', err);
         }
       });
 
@@ -447,6 +485,11 @@ export default function ClipRoomPage() {
           currentDeviceId={clientDevice?.deviceId}
           onOpenQR={() => setIsQRModalOpen(true)}
           roomSlug={slug}
+          onBeamDevice={(dev) => {
+            setBeamTargetDevice(dev);
+            setIsBeamModalOpen(true);
+          }}
+          onOpenP2P={() => setIsBeamModalOpen(true)}
         />
 
         {/* Main Editor Component with Code & .env Auto-detection & Syntax Highlighting */}
@@ -466,6 +509,7 @@ export default function ClipRoomPage() {
             slug={slug}
             onUploaded={() => fetchRoomData()}
             onShowToast={addToast}
+            onOpenP2P={() => setIsBeamModalOpen(true)}
           />
 
           {/* File listing with in-browser OCR */}
@@ -510,6 +554,23 @@ export default function ClipRoomPage() {
         onClose={() => setIsQRModalOpen(false)}
         url={pageUrl}
         roomSlug={slug}
+      />
+
+      {/* P2P Zero-Server WebRTC Beam Modal */}
+      <P2PBeamModal
+        isOpen={isBeamModalOpen}
+        onClose={() => setIsBeamModalOpen(false)}
+        devices={devices}
+        currentDeviceId={clientDevice?.deviceId}
+        targetDevice={beamTargetDevice}
+        onSelectTargetDevice={setBeamTargetDevice}
+        sendProgress={beamSendProgress}
+        receiveProgress={beamReceiveProgress}
+        incomingOffer={beamIncomingOffer}
+        onStartBeam={startBeamSendFile}
+        onAcceptBeam={acceptIncomingBeam}
+        onRejectBeam={rejectIncomingBeam}
+        onCancelBeam={cancelBeamTransfer}
       />
 
       <Toast toasts={toasts} onClose={removeToast} />

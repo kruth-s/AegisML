@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Camera, Upload, Loader2, Sparkles, Image as ImageIcon, PenTool } from 'lucide-react';
+import { Camera, Upload, Loader2, Sparkles, Image as ImageIcon, PenTool, Zap } from 'lucide-react';
 import { VoiceRecorder } from './VoiceRecorder';
 import { DoodleModal } from './DoodleModal';
 
@@ -9,9 +9,10 @@ interface FileUploadProps {
   slug: string;
   onUploaded?: () => void;
   onShowToast?: (text: string, type?: 'success' | 'error' | 'info') => void;
+  onOpenP2P?: () => void;
 }
 
-export const FileUpload: React.FC<FileUploadProps> = ({ slug, onUploaded, onShowToast }) => {
+export const FileUpload: React.FC<FileUploadProps> = ({ slug, onUploaded, onShowToast, onOpenP2P }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDoodleOpen, setIsDoodleOpen] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
