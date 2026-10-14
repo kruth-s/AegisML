@@ -26,6 +26,7 @@ export default function ClipRoomPage() {
   const [roomData, setRoomData] = useState<ClipboardRoom | null>(null);
   const [mainContent, setMainContent] = useState('');
   const [snippets, setSnippets] = useState<ClipItem[]>([]);
+  const [historyStack, setHistoryStack] = useState<ClipItem[]>([]);
   const [devices, setDevices] = useState<DevicePresence[]>([]);
   const [clientDevice, setClientDevice] = useState<Omit<DevicePresence, 'lastSeen'> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -190,6 +191,7 @@ export default function ClipRoomPage() {
             setMainContent(serverRoom.mainContent || '');
           }
           setSnippets(serverRoom.snippets || []);
+          setHistoryStack(serverRoom.historyStack || []);
           if (serverRoom.activeDevices) {
             setDevices(serverRoom.activeDevices);
           }
@@ -233,6 +235,7 @@ export default function ClipRoomPage() {
               setMainContent(payload.room.mainContent || '');
             }
             setSnippets(payload.room.snippets || []);
+            setHistoryStack(payload.room.historyStack || []);
           }
         } catch {}
       });
@@ -288,6 +291,7 @@ export default function ClipRoomPage() {
             setMainContent(updated.mainContent || '');
           }
           setSnippets(updated.snippets || []);
+          setHistoryStack(updated.historyStack || []);
         } catch (err) {
           console.error('SSE update parse error:', err);
         }
@@ -355,17 +359,25 @@ export default function ClipRoomPage() {
     } catch {}
   };
 
-  // Save updated room state to server
-  const persistRoomState = async (newMainContent: string, newSnippets: ClipItem[]) => {
+  // Save updated room state to server (keeps snippets and historyStack completely separate)
+  const persistRoomState = async (
+    newMainContent: string,
+    newSnippets: ClipItem[],
+    newHistoryStack?: ClipItem[]
+  ) => {
     setIsSaving(true);
     try {
+      const payload: Partial<ClipboardRoom> = {
+        mainContent: newMainContent,
+        snippets: newSnippets,
+      };
+      if (newHistoryStack !== undefined) {
+        payload.historyStack = newHistoryStack;
+      }
       const res = await fetch(`/api/clip/${slug}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mainContent: newMainContent,
-          snippets: newSnippets,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success && data.data) {
@@ -408,11 +420,11 @@ export default function ClipRoomPage() {
     // 2. Background persistent DB save (debounced 600ms)
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      persistRoomState(val, snippets);
+      persistRoomState(val, snippets, historyStack);
     }, 600);
   };
 
-  // Add new snippet card
+  // Add new snippet card (ONLY modifies user's saved snippets, NOT history stack)
   const handleAddSnippet = (content: string, title?: string) => {
     const newItem: ClipItem = {
       id: Math.random().toString(36).substring(2, 9),
@@ -423,14 +435,14 @@ export default function ClipRoomPage() {
     };
     const updated = [newItem, ...snippets];
     setSnippets(updated);
-    persistRoomState(mainContent, updated);
+    persistRoomState(mainContent, updated, historyStack);
   };
 
   // Delete snippet card
   const handleDeleteSnippet = (id: string) => {
     const updated = snippets.filter((s) => s.id !== id);
     setSnippets(updated);
-    persistRoomState(mainContent, updated);
+    persistRoomState(mainContent, updated, historyStack);
     addToast('Snippet removed', 'info');
   };
 
@@ -476,7 +488,7 @@ export default function ClipRoomPage() {
     }
   };
 
-  // Auto-push previous clip into Multi-Clip History Stack
+  // Auto-push previous clip into Multi-Clip History Stack (completely independent from saved snippets)
   const handlePushToStack = (contentToPush: string) => {
     if (!contentToPush.trim()) return;
     const newItem: ClipItem = {
@@ -487,9 +499,21 @@ export default function ClipRoomPage() {
       sourceDeviceId: clientDevice?.deviceId,
       sourceDeviceName: clientDevice?.deviceName,
     };
-    const updated = [newItem, ...snippets.filter((s) => s.content.trim() !== contentToPush.trim())].slice(0, 20);
-    setSnippets(updated);
-    persistRoomState(mainContent, updated);
+    const updated = [newItem, ...historyStack.filter((s) => s.content.trim() !== contentToPush.trim())].slice(0, 20);
+    setHistoryStack(updated);
+    persistRoomState(mainContent, snippets, updated);
+  };
+
+  const handleDeleteHistoryItem = (id: string) => {
+    const updated = historyStack.filter((s) => s.id !== id);
+    setHistoryStack(updated);
+    persistRoomState(mainContent, snippets, updated);
+  };
+
+  const handleClearHistoryStack = () => {
+    setHistoryStack([]);
+    persistRoomState(mainContent, snippets, []);
+    addToast('History stack cleared', 'info');
   };
 
   return (
@@ -590,16 +614,12 @@ export default function ClipRoomPage() {
           onPushToStack={handlePushToStack}
         />
 
-        {/* Multi-Clip History Stack (Smart Categories, 1-Tap Copy, Merged Copy All) */}
+        {/* Multi-Clip History Stack (Auto-managed FIFO history, completely independent from saved snippets) */}
         <MultiClipStack
-          stack={snippets}
+          stack={historyStack}
           onPromoteToEditor={(text) => handleMainContentChange(text)}
-          onDeleteClip={handleDeleteSnippet}
-          onClearStack={() => {
-            setSnippets([]);
-            persistRoomState(mainContent, []);
-            addToast('Stack cleared', 'info');
-          }}
+          onDeleteClip={handleDeleteHistoryItem}
+          onClearStack={handleClearHistoryStack}
           onShowToast={addToast}
         />
 
