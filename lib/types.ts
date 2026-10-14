@@ -66,6 +66,9 @@ export interface ClipboardRoom {
   burnExpiresAt?: number | null;
   burnAuthorDeviceId?: string;
   isBurned?: boolean;
+  // Private Vault / 3-Phrase CTF Lock
+  isPrivate?: boolean;
+  privateWords?: [string, string, string] | string[];
 }
 
 export interface APIResponse<T> {

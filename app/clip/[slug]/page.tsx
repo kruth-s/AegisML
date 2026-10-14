@@ -15,8 +15,11 @@ import { P2PBeamModal } from '@/components/P2PBeamModal';
 import { useWebRTCBeam } from '@/hooks/useWebRTCBeam';
 import { ClipboardRoom, ClipItem, DevicePresence } from '@/lib/types';
 import { getClientDeviceInfo, getBatteryStatus } from '@/lib/device';
-import { ArrowLeft, RefreshCw, Smartphone, Zap } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Smartphone, Zap, KeyRound, Copy, X } from 'lucide-react';
 import Link from 'next/link';
+import { CtfHackerBanner } from '@/components/CtfHackerBanner';
+import { PrivateRoomChallengeModal } from '@/components/PrivateRoomChallengeModal';
+import { decodeVaultCipher } from '@/lib/privateVault';
 
 export default function ClipRoomPage() {
   const params = useParams();
@@ -37,6 +40,20 @@ export default function ClipRoomPage() {
   const [pageUrl, setPageUrl] = useState('');
 
   const [remoteTypingUser, setRemoteTypingUser] = useState<{ name: string; color: string } | null>(null);
+
+  // Private Vault / 3-Phrase CTF Lock States
+  const [isVaultLocked, setIsVaultLocked] = useState(false);
+  const [vaultOptions, setVaultOptions] = useState<string[]>([]);
+  const [vaultCipher, setVaultCipher] = useState<string>('');
+  const [vaultWords, setVaultWords] = useState<string[]>([]);
+  const [showPhraseRevealBanner, setShowPhraseRevealBanner] = useState(false);
+
+  const effectiveWords =
+    vaultWords && vaultWords.length > 0
+      ? vaultWords
+      : vaultCipher
+      ? decodeVaultCipher(vaultCipher)
+      : (roomData?.privateWords || []);
 
   const clientDeviceRef = useRef<Omit<DevicePresence, 'lastSeen'> | null>(null);
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -171,10 +188,31 @@ export default function ClipRoomPage() {
     async (isSilent = false) => {
       if (!isSilent) setIsSyncing(true);
       try {
-        const res = await fetch(`/api/clip/${slug}`);
+        const sessionToken = typeof window !== 'undefined' ? sessionStorage.getItem(`vault_token_${slug}`) : null;
+        const headers: Record<string, string> = {};
+        if (sessionToken) {
+          headers['x-vault-token'] = sessionToken;
+        }
+
+        const res = await fetch(`/api/clip/${slug}`, { headers });
         const data = await res.json();
         if (data.success && data.data) {
-          const serverRoom: ClipboardRoom = data.data;
+          const serverRoom: any = data.data;
+
+          // Check if private vault
+          if (serverRoom.isPrivate) {
+            setVaultCipher(serverRoom.ctfCipher || '');
+            setVaultOptions(serverRoom.options || []);
+            setVaultWords(serverRoom.privateWords || []);
+            if (serverRoom.isLocked) {
+              setIsVaultLocked(true);
+            } else {
+              setIsVaultLocked(false);
+            }
+          } else {
+            setIsVaultLocked(false);
+          }
+
           setRoomData((prev) => {
             const mergedFiles =
               serverRoom.files && serverRoom.files.length > 0
@@ -187,11 +225,13 @@ export default function ClipRoomPage() {
             };
           });
 
-          if (!isTypingRef.current) {
+          if (!isTypingRef.current && !serverRoom.isLocked) {
             setMainContent(serverRoom.mainContent || '');
           }
-          setSnippets(serverRoom.snippets || []);
-          setHistoryStack(serverRoom.historyStack || []);
+          if (!serverRoom.isLocked) {
+            setSnippets(serverRoom.snippets || []);
+            setHistoryStack(serverRoom.historyStack || []);
+          }
           if (serverRoom.activeDevices) {
             setDevices(serverRoom.activeDevices);
           }
@@ -538,6 +578,12 @@ export default function ClipRoomPage() {
               <h1 className="text-base sm:text-xl font-bold text-white flex flex-wrap items-center gap-2">
                 <span className="text-zinc-400 font-medium">Room:</span>
                 <span className="font-mono text-[#ff5a1f]">{slug}</span>
+                <CtfHackerBanner
+                  slug={slug}
+                  isPrivate={Boolean(roomData?.isPrivate || isVaultLocked)}
+                  ctfCipher={vaultCipher}
+                  privateWords={vaultWords}
+                />
                 {remoteTypingUser && (
                   <span
                     className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-mono font-bold border shadow-sm animate-pulse"
@@ -662,8 +708,111 @@ export default function ClipRoomPage() {
 
       {/* Sleek Dark Footer */}
       <footer className="border-t border-zinc-900 bg-zinc-950 py-5">
+        {/* Phrase Reveal Banner */}
+        {showPhraseRevealBanner && (
+          <div className="max-w-2xl mx-auto px-4 mb-3 animate-fade-in">
+            <div className="relative p-3.5 sm:p-4 rounded-2xl bg-[#090b10] border border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.15)] text-zinc-200">
+              {/* Close Button */}
+              <button
+                onClick={() => setShowPhraseRevealBanner(false)}
+                className="absolute top-2.5 right-2.5 p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800/60 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <KeyRound className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                  3 SECRET KEY PHRASES
+                </span>
+                <span className="text-[10px] font-mono text-zinc-500">/{slug}</span>
+              </div>
+
+              {effectiveWords && effectiveWords.length > 0 ? (
+                <div>
+                  <p className="text-[11px] text-zinc-400 mb-2.5 font-sans">
+                    3 Secret key phrases for this room:
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 mb-2.5">
+                    {effectiveWords.slice(0, 3).map((word, idx) => (
+                      <div
+                        key={word}
+                        className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-center font-mono font-bold text-emerald-300 text-sm"
+                      >
+                        <span className="text-[9px] block text-emerald-500/70 font-sans uppercase mb-0.5">
+                          PHRASE {idx + 1}
+                        </span>
+                        {word}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[10px] text-zinc-500 font-mono">
+                      Tip: Use these phrases to authenticate on other devices.
+                    </span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(effectiveWords.slice(0, 3).join(' '));
+                        addToast('Copied 3 key phrases to clipboard', 'success');
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Copy className="w-3 h-3" />
+                      <span>Copy 3 Key Phrases</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+                  <div className="text-[11px] text-zinc-400 font-sans text-center sm:text-left">
+                    This room is currently a Standard Room. Upgrade to Private to generate 3 secret phrases.
+                  </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`/api/clip/${slug}/private`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ action: 'create_or_upgrade' }),
+                        });
+                        const data = await res.json();
+                        if (data.success && data.words) {
+                          if (data.token && typeof window !== 'undefined') {
+                            sessionStorage.setItem(`vault_token_${slug}`, data.token);
+                          }
+                          setIsVaultLocked(false);
+                          setVaultWords(data.words);
+                          setVaultCipher(data.ctfCipher || '');
+                          setShowPhraseRevealBanner(true);
+                          addToast('Room upgraded to Private Vault! 3 Phrases generated.', 'success');
+                          fetchRoomData();
+                        }
+                      } catch (e) {
+                        addToast('Failed to upgrade room', 'error');
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-semibold font-mono flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer"
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Generate Phrases Now</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="max-w-5xl mx-auto px-4 text-center text-xs text-zinc-500 font-mono">
-          Connected to Room <code className="text-[#ff5a1f]">{slug}</code> • Live Peer Radar & Real-time Sync
+          Connected to Room <code className="text-[#ff5a1f]">{slug}</code> • Live Peer Radar &{' '}
+          <span
+            onClick={() => setShowPhraseRevealBanner(!showPhraseRevealBanner)}
+            className="cursor-pointer hover:text-zinc-300 transition-colors"
+            title="Click to reveal room key phrases"
+          >
+            Real-time Sync
+          </span>
         </div>
       </footer>
 
@@ -696,6 +845,18 @@ export default function ClipRoomPage() {
         onStartRelaySend={startBeamRelaySend}
         onReceiveByRelayCode={receiveBeamByRelayCode}
         onSwitchToRelay={switchBeamToRelay}
+      />
+
+      {/* Private Vault 3-Phrase Challenge Modal */}
+      <PrivateRoomChallengeModal
+        isOpen={isVaultLocked}
+        slug={slug}
+        options={vaultOptions}
+        onClose={() => router.push('/')}
+        onSuccess={(token) => {
+          setIsVaultLocked(false);
+          fetchRoomData();
+        }}
       />
 
       <Toast toasts={toasts} onClose={removeToast} />
