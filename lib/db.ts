@@ -64,17 +64,15 @@ export async function saveClipboard(slug: string, data: Partial<ClipboardRoom>):
     views: 0,
   };
 
-  // Crucial: Never drop existing files, snippets, or history stack if partial data was sent (e.g. during typing)
+  // Crucial: Never drop existing files or snippets if partial data was sent (e.g. during typing)
   const mergedFiles = data.files !== undefined ? data.files : (existing.files || []);
   const mergedSnippets = data.snippets !== undefined ? data.snippets : (existing.snippets || []);
-  const mergedHistoryStack = data.historyStack !== undefined ? data.historyStack : (existing.historyStack || []);
 
   const updatedRoom: ClipboardRoom = {
     ...existing,
     ...data,
     files: mergedFiles,
     snippets: mergedSnippets,
-    historyStack: mergedHistoryStack,
     slug: normalizedSlug,
     updatedAt: new Date().toISOString(),
   };

@@ -54,7 +54,6 @@ export interface ClipboardRoom {
   slug: string;
   mainContent: string;
   snippets: ClipItem[];
-  historyStack?: ClipItem[];
   files?: FileItem[];
   activeDevices?: DevicePresence[];
   createdAt: string;

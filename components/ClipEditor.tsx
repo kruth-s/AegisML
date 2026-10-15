@@ -53,8 +53,6 @@ interface ClipEditorProps {
   isBurned?: boolean;
   onSetBurnMode?: (mode: 'burn_on_copy' | 'timer' | null, seconds?: number) => void;
   onTriggerBurn?: () => void;
-  // Multi-Clip Stack Auto-Push
-  onPushToStack?: (text: string) => void;
 }
 
 export const ClipEditor: React.FC<ClipEditorProps> = ({
@@ -73,7 +71,6 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
   isBurned = false,
   onSetBurnMode,
   onTriggerBurn,
-  onPushToStack,
 }) => {
   const [content, setContent] = useState(initialContent);
   const [copied, setCopied] = useState(false);
@@ -160,14 +157,6 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
     onSave(val);
   };
 
-  // Handle manual paste event to auto-stash previous text to stack
-  const handlePasteEvent = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const pastedText = e.clipboardData.getData('text');
-    if (pastedText && content && content.trim() && content.trim() !== pastedText.trim()) {
-      onPushToStack?.(content.trim());
-      onShowToast('Previous clip pushed to History Stack (#1)', 'info');
-    }
-  };
 
   // Prettify / Format content
   const handleFormat = () => {
@@ -211,15 +200,11 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
     }
   };
 
-  // Paste directly from Browser Clipboard with auto-stacking
+  // Paste directly from Browser Clipboard
   const handlePasteFromClipboard = async () => {
     try {
       const text = await navigator.clipboard.readText();
       if (text) {
-        if (content && content.trim() && content.trim() !== text.trim()) {
-          onPushToStack?.(content.trim());
-          onShowToast('Previous clip pushed to History Stack (#1)', 'info');
-        }
         setContent(text);
         onSave(text);
         onShowToast('Pasted from clipboard!', 'success');
@@ -234,7 +219,6 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
   // Clear text
   const handleClear = () => {
     if (!content) return;
-    onPushToStack?.(content);
     setContent('');
     onSave('');
     onShowToast('Clipboard cleared', 'info');
@@ -506,7 +490,7 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
           <button
             onClick={handlePasteFromClipboard}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-xs font-semibold transition-colors"
-            title="Paste text from clipboard (auto-pushes previous text to history stack)"
+            title="Paste text from clipboard"
           >
             <ClipboardPaste className="w-3.5 h-3.5 text-indigo-400" />
             <span>Paste</span>
@@ -705,7 +689,6 @@ export const ClipEditor: React.FC<ClipEditorProps> = ({
               ref={textareaRef}
               value={content}
               onChange={handleChange}
-              onPaste={handlePasteEvent}
               placeholder="Paste or type text, URLs, code, or secrets here... Anyone accessing this room will see updates live in real-time."
               className="w-full flex-1 min-h-[240px] sm:min-h-[300px] p-5 sm:p-6 bg-transparent text-zinc-100 placeholder:text-zinc-600 font-mono text-sm sm:text-base leading-relaxed focus:outline-none resize-y"
               spellCheck="false"
